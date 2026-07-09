@@ -1,4 +1,4 @@
-<style>
+style>
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
 
 :root{
@@ -181,7 +181,12 @@ table.dc-table tr:hover td{background:#FBF8F0;}
   position:fixed;inset:0;background:rgba(14,27,46,0.55);display:flex;align-items:center;justify-content:center;
   z-index:100;padding:20px;
 }
-.dc-modal{background:var(--paper);border-radius:14px;max-width:460px;width:100%;max-height:90vh;overflow-y:auto;padding:0;}
+.dc-modal{background:var(--paper);border-radius:14px;max-width:460px;width:100%;max-height:90vh;overflow-y:auto;padding:0;position:relative;}
+.dc-modal-x{
+  position:absolute;top:10px;right:12px;background:none;border:none;font-size:20px;line-height:1;
+  color:var(--muted);cursor:pointer;padding:6px;border-radius:50%;z-index:2;
+}
+.dc-modal-x:hover{background:var(--paper-line);color:var(--navy);}
 .dc-modal-inner{padding:26px;}
 .dc-modal-close-row{display:flex;justify-content:flex-end;gap:8px;padding:14px 26px 22px;}
 
@@ -350,6 +355,7 @@ table.dc-table tr:hover td{background:#FBF8F0;}
 <!-- RECEIPT MODAL -->
 <div class="dc-modal-backdrop dc-print-hide" id="dc-modal" hidden>
   <div class="dc-modal">
+    <button class="dc-modal-x" id="dc-modal-x" title="Cerrar" type="button">✕</button>
     <div class="dc-modal-inner" id="dc-modal-body"></div>
     <div class="dc-modal-close-row">
       <button class="dc-btn ghost" id="dc-modal-close">Cerrar</button>
@@ -767,13 +773,24 @@ function openReceipt(id){
   el('dc-modal').hidden = false;
   el('dc-modal').dataset.movId = id;
 }
-el('dc-modal-close').addEventListener('click', ()=> el('dc-modal').hidden = true);
+function closeReceiptModal(){
+  el('dc-modal').hidden = true;
+  el('dc-modal-body').innerHTML = '';
+}
+el('dc-modal-close').addEventListener('click', closeReceiptModal);
+el('dc-modal-x').addEventListener('click', closeReceiptModal);
+el('dc-modal').addEventListener('click', (e)=>{
+  if(e.target.id === 'dc-modal') closeReceiptModal();
+});
+document.addEventListener('keydown', (e)=>{
+  if(e.key === 'Escape' && !el('dc-modal').hidden) closeReceiptModal();
+});
 el('dc-modal-print').addEventListener('click', ()=>{
   const id = el('dc-modal').dataset.movId;
   const m = computeLedger().find(x=>x.id===id);
   if(!m) return;
   el('dc-print-area').innerHTML = `<div style="max-width:420px;margin:40px auto;font-family:Inter,sans-serif;">${receiptHTML(m)}</div>`;
-  window.print();
+  try{ window.print(); }catch(err){ console.error('No se pudo abrir el diálogo de impresión', err); }
 });
 
 // ---------- Historial print ----------

@@ -1,0 +1,935 @@
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
+
+:root{
+  --navy:#182B45;
+  --navy-deep:#0E1B2E;
+  --brass:#A9812F;
+  --brass-light:#CBA94D;
+  --paper:#FAF7EF;
+  --paper-line:#E7DFC7;
+  --card:#FFFFFF;
+  --ink:#26241F;
+  --muted:#84806E;
+  --sage:#3F6B4A;
+  --sage-bg:#EAF1EA;
+  --rust:#8C3B2E;
+  --rust-bg:#F6EAE7;
+  font-size:16px;
+}
+*{box-sizing:border-box;}
+body{margin:0;}
+.dc-app{
+  font-family:'Inter',sans-serif;
+  background:var(--paper);
+  color:var(--ink);
+  min-height:100vh;
+  padding:0;
+}
+.dc-shell{max-width:1000px;margin:0 auto;padding:28px 20px 60px;}
+
+/* ---------- Masthead ---------- */
+.dc-masthead{
+  display:flex;align-items:center;gap:22px;
+  background:linear-gradient(135deg,var(--navy) 0%,var(--navy-deep) 100%);
+  border-radius:14px;
+  padding:26px 30px;
+  color:#F3EFE3;
+  position:relative;
+  overflow:hidden;
+}
+.dc-masthead::after{
+  content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(115deg,rgba(203,169,77,0.05) 0px,rgba(203,169,77,0.05) 1px,transparent 1px,transparent 26px);
+  pointer-events:none;
+}
+.dc-seal{flex:0 0 auto;filter:drop-shadow(0 2px 3px rgba(0,0,0,0.35));}
+.dc-masthead-text{flex:1;min-width:0;}
+.dc-eyebrow{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--brass-light);margin:0 0 4px;
+}
+.dc-title{
+  font-family:'Fraunces',serif;font-weight:600;font-size:30px;
+  margin:0;letter-spacing:.01em;line-height:1.05;
+}
+.dc-subtitle{
+  margin:6px 0 0;font-size:13.5px;color:#C9CBD6;font-weight:500;
+}
+.dc-masthead-balance{
+  text-align:right;flex:0 0 auto;position:relative;z-index:1;
+}
+.dc-masthead-balance .label{
+  font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--brass-light);margin:0 0 4px;
+}
+.dc-masthead-balance .amount{
+  font-family:'Fraunces',serif;font-weight:600;font-size:28px;color:#fff;
+}
+.dc-masthead-balance .fecha{
+  font-size:11.5px;color:#B9BCCB;margin-top:2px;
+}
+
+/* ---------- Nav tabs ---------- */
+.dc-tabs{
+  display:flex;gap:4px;margin:22px 0 0;border-bottom:2px solid var(--paper-line);
+  overflow-x:auto;
+}
+.dc-tab{
+  font-family:'Inter',sans-serif;font-weight:600;font-size:13.5px;
+  background:none;border:none;cursor:pointer;color:var(--muted);
+  padding:11px 16px 13px;border-bottom:3px solid transparent;
+  white-space:nowrap;transition:color .15s ease;
+}
+.dc-tab:hover{color:var(--navy);}
+.dc-tab.active{color:var(--navy);border-bottom-color:var(--brass);}
+
+/* ---------- Cards / sections ---------- */
+.dc-section{padding-top:22px;}
+.dc-card{
+  background:var(--card);border:1px solid var(--paper-line);border-radius:12px;
+  padding:22px 24px;margin-bottom:18px;
+}
+.dc-card h2{
+  font-family:'Fraunces',serif;font-size:19px;margin:0 0 4px;color:var(--navy);font-weight:600;
+}
+.dc-card .dc-hint{font-size:12.5px;color:var(--muted);margin:0 0 16px;}
+
+.dc-stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px;}
+.dc-stat{
+  background:var(--card);border:1px solid var(--paper-line);border-radius:12px;padding:16px 18px;
+}
+.dc-stat .k{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);}
+.dc-stat .v{font-family:'Fraunces',serif;font-size:22px;font-weight:600;margin-top:4px;color:var(--navy);}
+.dc-stat.ing .v{color:var(--sage);}
+.dc-stat.egr .v{color:var(--rust);}
+
+/* ---------- Forms ---------- */
+.dc-form{display:grid;grid-template-columns:1fr 1fr;gap:14px 16px;}
+.dc-form .full{grid-column:1/-1;}
+.dc-field label{
+  display:block;font-size:12px;font-weight:600;color:var(--navy);margin-bottom:5px;
+  text-transform:uppercase;letter-spacing:.04em;
+}
+.dc-field input,.dc-field select,.dc-field textarea{
+  width:100%;padding:9px 11px;border:1.5px solid var(--paper-line);border-radius:8px;
+  font-family:'Inter',sans-serif;font-size:14px;background:#FEFDFA;color:var(--ink);
+}
+.dc-field input:focus,.dc-field select:focus,.dc-field textarea:focus{
+  outline:none;border-color:var(--brass);background:#fff;
+}
+.dc-type-toggle{display:flex;gap:8px;grid-column:1/-1;}
+.dc-type-btn{
+  flex:1;padding:10px;border-radius:8px;border:1.5px solid var(--paper-line);
+  background:#fff;cursor:pointer;font-weight:600;font-size:13.5px;color:var(--muted);
+}
+.dc-type-btn.sel-ing.active{background:var(--sage-bg);border-color:var(--sage);color:var(--sage);}
+.dc-type-btn.sel-egr.active{background:var(--rust-bg);border-color:var(--rust);color:var(--rust);}
+
+.dc-btn{
+  font-family:'Inter',sans-serif;font-weight:700;font-size:13.5px;
+  padding:11px 20px;border-radius:8px;border:none;cursor:pointer;
+  background:var(--navy);color:#F3EFE3;letter-spacing:.02em;
+}
+.dc-btn:hover{background:var(--navy-deep);}
+.dc-btn.brass{background:var(--brass);color:#2A2005;}
+.dc-btn.brass:hover{background:var(--brass-light);}
+.dc-btn.ghost{background:none;border:1.5px solid var(--paper-line);color:var(--navy);}
+.dc-btn.ghost:hover{border-color:var(--navy);}
+.dc-btn.small{padding:6px 12px;font-size:12px;}
+.dc-btn.danger{background:none;border:1.5px solid var(--rust);color:var(--rust);}
+.dc-btn.danger:hover{background:var(--rust-bg);}
+
+/* ---------- Tables ---------- */
+.dc-table-wrap{overflow-x:auto;}
+table.dc-table{width:100%;border-collapse:collapse;font-size:13px;}
+table.dc-table th{
+  text-align:left;font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--muted);padding:8px 10px;border-bottom:2px solid var(--paper-line);
+  white-space:nowrap;
+}
+table.dc-table td{padding:9px 10px;border-bottom:1px solid var(--paper-line);vertical-align:middle;}
+table.dc-table tr:hover td{background:#FBF8F0;}
+.dc-amt{font-family:'IBM Plex Mono',monospace;font-weight:600;text-align:right;white-space:nowrap;}
+.dc-amt.ing{color:var(--sage);}
+.dc-amt.egr{color:var(--rust);}
+.dc-amt.saldo{color:var(--navy);}
+.dc-pill{
+  display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:600;
+  padding:2px 8px;border-radius:20px;letter-spacing:.03em;
+}
+.dc-pill.ing{background:var(--sage-bg);color:var(--sage);}
+.dc-pill.egr{background:var(--rust-bg);color:var(--rust);}
+.dc-row-actions{display:flex;gap:6px;}
+.dc-icon-btn{
+  border:none;background:none;cursor:pointer;color:var(--muted);font-size:14px;padding:2px 5px;border-radius:5px;
+}
+.dc-icon-btn:hover{background:var(--paper-line);color:var(--navy);}
+
+.dc-filter-row{display:flex;gap:12px;align-items:end;flex-wrap:wrap;margin-bottom:16px;}
+.dc-filter-row .dc-field{min-width:150px;}
+.dc-empty{text-align:center;color:var(--muted);font-size:13px;padding:30px 10px;}
+
+/* ---------- Search box (padron) ---------- */
+.dc-search{position:relative;margin-bottom:16px;}
+.dc-search input{padding-left:34px;}
+.dc-search::before{content:'⌕';position:absolute;left:12px;top:9px;color:var(--muted);font-size:16px;}
+
+/* ---------- Modal / Receipt ---------- */
+.dc-modal-backdrop{
+  position:fixed;inset:0;background:rgba(14,27,46,0.55);display:flex;align-items:center;justify-content:center;
+  z-index:100;padding:20px;
+}
+.dc-modal{background:var(--paper);border-radius:14px;max-width:460px;width:100%;max-height:90vh;overflow-y:auto;padding:0;}
+.dc-modal-inner{padding:26px;}
+.dc-modal-close-row{display:flex;justify-content:flex-end;gap:8px;padding:14px 26px 22px;}
+
+.dc-receipt{
+  background:#fff;border:1.5px solid var(--paper-line);border-radius:10px;padding:22px 24px;position:relative;
+}
+.dc-receipt::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:5px;
+  background:linear-gradient(90deg,var(--brass),var(--navy));border-radius:10px 10px 0 0;
+}
+.dc-receipt-head{display:flex;justify-content:space-between;align-items:flex-start;margin-top:6px;}
+.dc-receipt-head .brand{display:flex;gap:10px;align-items:center;}
+.dc-receipt-head .brand .name{font-family:'Fraunces',serif;font-weight:600;font-size:16px;color:var(--navy);line-height:1.15;}
+.dc-receipt-head .brand .sub{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;}
+.dc-receipt-head .folio{text-align:right;}
+.dc-receipt-head .folio .k{font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;}
+.dc-receipt-head .folio .v{font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:600;color:var(--brass);}
+.dc-receipt hr{border:none;border-top:1px dashed var(--paper-line);margin:16px 0;}
+.dc-receipt-row{display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:9px;gap:10px;}
+.dc-receipt-row .k{color:var(--muted);text-transform:uppercase;font-size:10.5px;letter-spacing:.05em;flex:0 0 auto;padding-top:2px;}
+.dc-receipt-row .v{font-weight:600;color:var(--ink);text-align:right;}
+.dc-receipt-amount{
+  text-align:center;margin:18px 0 10px;padding:14px;background:var(--sage-bg);border-radius:8px;
+}
+.dc-receipt-amount .num{font-family:'Fraunces',serif;font-size:26px;font-weight:700;color:var(--sage);}
+.dc-receipt-letras{font-size:11px;text-align:center;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;line-height:1.5;}
+.dc-receipt-sign{margin-top:26px;text-align:center;}
+.dc-receipt-sign .line{border-top:1px solid var(--ink);width:60%;margin:0 auto 5px;}
+.dc-receipt-sign .cap{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;}
+
+/* ---------- Print ---------- */
+#dc-print-area{display:none;}
+@media print{
+  body *{visibility:hidden;}
+  #dc-print-area,#dc-print-area *{visibility:visible;}
+  #dc-print-area{display:block;position:absolute;top:0;left:0;width:100%;}
+  .dc-print-hide{display:none !important;}
+}
+
+@media (max-width:640px){
+  .dc-masthead{flex-wrap:wrap;}
+  .dc-masthead-balance{text-align:left;width:100%;margin-top:10px;}
+  .dc-form{grid-template-columns:1fr;}
+  .dc-stat-row{grid-template-columns:1fr;}
+}
+</style>
+
+<div class="dc-app">
+<div class="dc-shell">
+
+  <div class="dc-masthead">
+    <div class="dc-seal" id="dc-seal-slot"></div>
+    <div class="dc-masthead-text">
+      <p class="dc-eyebrow">Colonia · Administración</p>
+      <h1 class="dc-title">Distrito Comercial</h1>
+      <p class="dc-subtitle">Control de ingresos y egresos</p>
+    </div>
+    <div class="dc-masthead-balance">
+      <p class="label">Saldo disponible</p>
+      <div class="amount" id="dc-saldo-actual">$0.00</div>
+      <div class="fecha" id="dc-fecha-hoy"></div>
+    </div>
+  </div>
+
+  <nav class="dc-tabs">
+    <button class="dc-tab active" data-tab="panel">Panel principal</button>
+    <button class="dc-tab" data-tab="movimiento">Registrar movimiento</button>
+    <button class="dc-tab" data-tab="historial">Historial</button>
+    <button class="dc-tab" data-tab="recibos">Recibos</button>
+    <button class="dc-tab" data-tab="padron">Padrón de lotes</button>
+  </nav>
+
+  <!-- PANEL -->
+  <section class="dc-section" id="tab-panel">
+    <div class="dc-stat-row">
+      <div class="dc-stat"><div class="k">Saldo inicial 2026</div><div class="v" id="dc-stat-inicial">$0.00</div></div>
+      <div class="dc-stat ing"><div class="k">Total ingresos</div><div class="v" id="dc-stat-ingresos">$0.00</div></div>
+      <div class="dc-stat egr"><div class="k">Total egresos</div><div class="v" id="dc-stat-egresos">$0.00</div></div>
+    </div>
+    <div class="dc-card">
+      <h2>Últimos movimientos</h2>
+      <p class="dc-hint">Los 8 movimientos más recientes registrados.</p>
+      <div class="dc-table-wrap"><table class="dc-table">
+        <thead><tr><th>Fecha</th><th>Concepto</th><th>Lote</th><th>Tipo</th><th style="text-align:right">Cantidad</th></tr></thead>
+        <tbody id="dc-panel-recent"></tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <!-- MOVIMIENTO -->
+  <section class="dc-section" id="tab-movimiento" hidden>
+    <div class="dc-card">
+      <h2 id="dc-mov-title">Registrar movimiento</h2>
+      <p class="dc-hint">Cada ingreso genera automáticamente un recibo con folio.</p>
+      <form class="dc-form" id="dc-mov-form">
+        <div class="dc-type-toggle">
+          <button type="button" class="dc-type-btn sel-ing active" data-tipo="ingreso">↓ Ingreso</button>
+          <button type="button" class="dc-type-btn sel-egr" data-tipo="egreso">↑ Egreso</button>
+        </div>
+        <div class="dc-field"><label>Fecha de operación</label><input type="date" id="f-fecha" required></div>
+        <div class="dc-field" id="f-lote-wrap"><label>Lote (opcional)</label>
+          <select id="f-lote"><option value="">— Sin lote / otro —</option></select>
+        </div>
+        <div class="dc-field full"><label>Nombre</label><input type="text" id="f-nombre" placeholder="Nombre de quien paga o recibe el pago" required></div>
+        <div class="dc-field full"><label>Concepto</label>
+          <select id="f-concepto-select"></select>
+          <input type="text" id="f-concepto-otro" placeholder="Especifica el concepto" style="margin-top:8px;">
+        </div>
+        <div class="dc-field"><label>Cantidad (MXN)</label><input type="number" id="f-cantidad" min="0" step="0.01" placeholder="0.00" required></div>
+        <div class="full" style="display:flex;gap:10px;margin-top:4px;">
+          <button type="submit" class="dc-btn brass" id="f-submit">Registrar ingreso</button>
+          <button type="button" class="dc-btn ghost dc-print-hide" id="f-cancel-edit" hidden>Cancelar edición</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- HISTORIAL -->
+  <section class="dc-section" id="tab-historial" hidden>
+    <div class="dc-card">
+      <h2>Historial de movimientos</h2>
+      <p class="dc-hint">Filtra por rango de fechas e imprime el historial de ese periodo.</p>
+      <div class="dc-filter-row">
+        <div class="dc-field"><label>Desde</label><input type="date" id="h-desde"></div>
+        <div class="dc-field"><label>Hasta</label><input type="date" id="h-hasta"></div>
+        <button class="dc-btn ghost dc-print-hide" id="h-limpiar">Ver todo</button>
+        <button class="dc-btn brass dc-print-hide" id="h-imprimir">🖨 Imprimir historial</button>
+      </div>
+      <div class="dc-table-wrap"><table class="dc-table">
+        <thead><tr><th>Fecha</th><th>Folio</th><th>Concepto / Nombre</th><th>Lote</th><th style="text-align:right">Ingreso</th><th style="text-align:right">Egreso</th><th style="text-align:right">Saldo</th><th></th></tr></thead>
+        <tbody id="h-tbody"></tbody>
+      </table></div>
+      <div class="dc-empty" id="h-empty" hidden>No hay movimientos en este periodo.</div>
+    </div>
+  </section>
+
+  <!-- RECIBOS -->
+  <section class="dc-section" id="tab-recibos" hidden>
+    <div class="dc-card">
+      <h2>Recibos emitidos</h2>
+      <p class="dc-hint">Busca por folio o nombre y vuelve a imprimir cualquier recibo.</p>
+      <div class="dc-search"><input type="text" id="r-buscar" placeholder="Buscar por folio o nombre…"></div>
+      <div class="dc-table-wrap"><table class="dc-table">
+        <thead><tr><th>Folio</th><th>Fecha</th><th>Nombre</th><th>Lote</th><th style="text-align:right">Cantidad</th><th></th></tr></thead>
+        <tbody id="r-tbody"></tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <!-- PADRON -->
+  <section class="dc-section" id="tab-padron" hidden>
+    <div class="dc-card">
+      <h2>Padrón de lotes — Distrito Comercial</h2>
+      <p class="dc-hint">Referencia de los 40 lotes registrados. Úsalo al capturar un ingreso.</p>
+      <div class="dc-search"><input type="text" id="p-buscar" placeholder="Buscar por nombre, lote o ubicación…"></div>
+      <div class="dc-table-wrap"><table class="dc-table">
+        <thead><tr><th>Lote</th><th>Nombre</th><th>Ubicación</th><th>Teléfono</th></tr></thead>
+        <tbody id="p-tbody"></tbody>
+      </table></div>
+    </div>
+  </section>
+
+</div>
+</div>
+
+<!-- RECEIPT MODAL -->
+<div class="dc-modal-backdrop dc-print-hide" id="dc-modal" hidden>
+  <div class="dc-modal">
+    <div class="dc-modal-inner" id="dc-modal-body"></div>
+    <div class="dc-modal-close-row">
+      <button class="dc-btn ghost" id="dc-modal-close">Cerrar</button>
+      <button class="dc-btn brass" id="dc-modal-print">🖨 Imprimir recibo</button>
+    </div>
+  </div>
+</div>
+
+<div id="dc-print-area"></div>
+
+<script>
+(function(){
+
+const STORAGE_KEY = 'dc-data-v1';
+const LOTES = [
+ {lote:1, nombre:'Peter Friesen Penner', ubicacion:'Campo 2B', telefono:'625-115-4080'},
+ {lote:2, nombre:'Rene Sebastian Friesen Froese', ubicacion:'Campo 2B', telefono:'625-121-9818'},
+ {lote:3, nombre:'Rene Sebastian Friesen Froese', ubicacion:'Campo 2B', telefono:'625-121-9818'},
+ {lote:4, nombre:'Jacobo Loewen Froese', ubicacion:'Campo 2B', telefono:'625-115-2452'},
+ {lote:5, nombre:'John Neufeld Thiessen', ubicacion:'Campo 10.5', telefono:'625-122-7012'},
+ {lote:6, nombre:'Bernhard Wiebe Klassen', ubicacion:'Campo 106.5', telefono:'625-111-6009'},
+ {lote:7, nombre:'Juan Neufeld Reimer', ubicacion:'Campo 10', telefono:'625-120-3176'},
+ {lote:8, nombre:'Pedro Friessen Martens', ubicacion:'KM 9', telefono:'625-589-1618'},
+ {lote:9, nombre:'Pedro Peters Thiessen', ubicacion:'Campo 100', telefono:'625-589-1661'},
+ {lote:10, nombre:'Abraham Penner Redecop', ubicacion:'Campo 26', telefono:'625-108-0522'},
+ {lote:11, nombre:'Abraham Krahn Wiebe', ubicacion:'Campo 2B', telefono:'625-115-3806'},
+ {lote:12, nombre:'Bient Giesbrecht', ubicacion:'KM 26', telefono:'636-100-7424'},
+ {lote:13, nombre:'Henry Neufeld Reimer', ubicacion:'Campo 8.5', telefono:'625-119-6659'},
+ {lote:14, nombre:'Bernardo Loewen Penner', ubicacion:'Campo 6.5', telefono:'625-120-1539'},
+ {lote:15, nombre:'Bernardo Loewen Penner', ubicacion:'Campo 6.5', telefono:'625-120-1539'},
+ {lote:16, nombre:'Bernardo Loewen Penner', ubicacion:'Campo 6.5', telefono:'625-120-1539'},
+ {lote:17, nombre:'Jacobo Zuderman Goertzen', ubicacion:'Camello', telefono:'636-103-7885'},
+ {lote:18, nombre:'Jacobo Wiebe Shellenberg', ubicacion:'Campo 106', telefono:'625-103-7779'},
+ {lote:19, nombre:'Bernhard Neufeld Loewen', ubicacion:'KM 18', telefono:'625-118-9597'},
+ {lote:20, nombre:'Jacob Thiessen Wiebe', ubicacion:'Campo 2A', telefono:'625-105-9900'},
+ {lote:21, nombre:'Heinrich Krahn Wiebe', ubicacion:'Campo 107', telefono:'625-589-1746'},
+ {lote:22, nombre:'Fernando Letkeman Loewen', ubicacion:'KM 18', telefono:'625-105-9897'},
+ {lote:23, nombre:'Heinrich Peters Dyck', ubicacion:'KM 8', telefono:'625-106-5794'},
+ {lote:24, nombre:'Conrelius Groening Peters', ubicacion:'Campo 2B', telefono:'625-104-0335'},
+ {lote:25, nombre:'Cornelius Neufeld Enns', ubicacion:'KM 12', telefono:'625-589-1053'},
+ {lote:26, nombre:'Daniel Kornelsen Unger', ubicacion:'Campo 8', telefono:'625-589-0936'},
+ {lote:27, nombre:'Cornelio Harms Penner', ubicacion:'Campo 2B', telefono:'625-115-2579'},
+ {lote:28, nombre:'Gerardo Enns Wall', ubicacion:'Campo 2B', telefono:'625-837-3425'},
+ {lote:29, nombre:'Franz Loewen Klassen', ubicacion:'Campo 4', telefono:'625-111-0472'},
+ {lote:30, nombre:'Pedro Friessen Martens', ubicacion:'KM 9', telefono:'625-589-1618'},
+ {lote:31, nombre:'Bernhard Krahn Neudorf', ubicacion:'KM 28', telefono:'636-100-7306'},
+ {lote:32, nombre:'Bryan Alejandro Teichroeb Fehr', ubicacion:'Campo 104', telefono:'626-499-1969'},
+ {lote:33, nombre:'Wilhelm Neufeld Enns', ubicacion:'KM 14', telefono:'625-115-4650'},
+ {lote:34, nombre:'Heinrich Krahn Wiebe', ubicacion:'Campo 107', telefono:'625-589-1746'},
+ {lote:35, nombre:'Johan Wall Knelsen', ubicacion:'Campo 2B', telefono:'625-106-7672'},
+ {lote:36, nombre:'Cornelius Loewen Reimer', ubicacion:'Campo 22 Golden Homes', telefono:'636-103-7732'},
+ {lote:37, nombre:'Cornelius Loewen Reimer', ubicacion:'Campo 22 Golden Homes', telefono:'636-103-7732'},
+ {lote:38, nombre:'Cornelius Loewen Reimer', ubicacion:'Campo 22 Golden Homes', telefono:'636-103-7732'},
+ {lote:39, nombre:'Peter Loewen Reimer', ubicacion:'Campo 35', telefono:'625-114-5314'},
+ {lote:40, nombre:'Johan Thiessen Peters', ubicacion:'KM 14', telefono:'625-589-1482'}
+];
+
+// ---- historical import (transcribed from the uploaded 2026 ledger scan) ----
+function h(fecha,tipo,nombre,concepto,cantidad){return {fecha,tipo,nombre,concepto,cantidad,lote:null};}
+const HIST_RAW = [
+ h('2026-01-09','egreso','Javier González','Limpieza del distrito comercial',12000),
+ h('2026-01-15','ingreso','Johan Neufeld','Pago de mantenimiento',6000),
+ h('2026-01-15','ingreso','Johan Neufeld','Pago de mantenimiento',6000),
+ h('2026-01-15','ingreso','Heirich Neufeld','Pago de mantenimiento',6000),
+ h('2026-01-16','ingreso','Heirich Peters','Pago de mantenimiento',6000),
+ h('2026-01-16','ingreso','Heinrich Krahn','Pago de mantenimiento',6000),
+ h('2026-01-16','ingreso','Heinrich Krahn','Pago de mantenimiento',6000),
+ h('2026-01-16','ingreso','Jacob Thiessen','Pago de mantenimiento',6000),
+ h('2026-01-16','ingreso','Cornelio Harms','Pago de mantenimiento',6000),
+ h('2026-01-17','ingreso','Pedro Peters','Pago de mantenimiento',6000),
+ h('2026-01-17','ingreso','Jacobo Wiebe','Pago de mantenimiento',6000),
+ h('2026-01-19','ingreso','Bernardo Loewen','Pago de mantenimiento',6000),
+ h('2026-01-19','ingreso','Bernardo Loewen','Pago de mantenimiento',6000),
+ h('2026-01-19','ingreso','Bernardo Loewen','Pago de mantenimiento',6000),
+ h('2026-01-20','ingreso','Wilhelm Neifeld','Pago de mantenimiento',6000),
+ h('2026-01-20','ingreso','Abraham Penner','Pago de mantenimiento',6000),
+ h('2026-01-20','ingreso','Jacobo Loewen','Pago de mantenimiento',6000),
+ h('2026-01-22','ingreso','Enrique Krahn','Pago de mantenimiento',6000),
+ h('2026-01-23','ingreso','David Thiessen','Pago de mantenimiento',6000),
+ h('2026-01-26','ingreso','Abraham Krahn','Pago de mantenimiento',6000),
+ h('2026-01-26','ingreso','Franz Loewen','Pago de mantenimiento',6000),
+ h('2026-01-26','ingreso','Cornelius Neufeld','Pago de mantenimiento',6000),
+ h('2026-01-26','ingreso','Bernardo Neufeld','Pago de mantenimiento',6000),
+ h('2026-01-26','ingreso','Johan Thiessen','Pago de mantenimiento',6000),
+ h('2026-01-27','ingreso','Cornelius Groening','Pago de mantenimiento',6000),
+ h('2026-01-27','ingreso','Johan Wall','Pago de mantenimiento',6000),
+ h('2026-01-27','ingreso','David Kornelsen','Pago de mantenimiento',6000),
+ h('2026-01-27','ingreso','Bernardo Krahn','Pago de mantenimiento',6000),
+ h('2026-01-27','ingreso','Bryan Teichroeb','Pago de mantenimiento',6000),
+ h('2026-01-28','ingreso','Rene Friessen','Pago de mantenimiento',6000),
+ h('2026-01-28','ingreso','Rene Friessen','Pago de mantenimiento',6000),
+ h('2026-01-28','ingreso','Fernando Letkeman','Pago de mantenimiento',6000),
+ h('2026-01-28','ingreso','Bernard Wiebe','Pago de mantenimiento',6000),
+ h('2026-01-28','ingreso','Cornelius Loewen','Pago de mantenimiento',6000),
+ h('2026-01-28','ingreso','Cornelius Loewen','Pago de mantenimiento',6000),
+ h('2026-01-28','ingreso','Cornelius Loewen','Pago de mantenimiento',6000),
+ h('2026-01-29','egreso','Pago Predial','Pago de impuesto predial',56700),
+ h('2026-01-30','ingreso','Gerardo Enns','Pago de mantenimiento',6000),
+ h('2026-01-30','ingreso','Peter Friessen','Pago de mantenimiento',6000),
+ h('2026-01-30','egreso','Pago CFE','Pago de energía eléctrica (CFE)',22636),
+ h('2026-01-31','ingreso','Pedro Friessen','Pago de mantenimiento',6000),
+ h('2026-01-31','ingreso','Pedro Friessen','Pago de mantenimiento',6000),
+ h('2026-02-03','ingreso','Bient Giesbrecht','Pago de mantenimiento',6000),
+ h('2026-02-13','egreso','Javier González','Limpieza del distrito comercial',12000),
+ h('2026-02-15','egreso','Mantenimiento','Mantenimiento general',6000),
+ h('2026-02-16','egreso','Pago CFE','Pago de energía eléctrica (CFE)',1654),
+ h('2026-03-17','egreso','Javier González','Limpieza del distrito comercial',12000),
+ h('2026-03-17','egreso','Pago CFE','Pago de energía eléctrica (CFE)',1782),
+ h('2026-03-31','egreso','Arreglo de fotoceldas','Arreglo de fotoceldas',5000),
+ h('2026-04-07','egreso','Pago CFE','Pago de energía eléctrica (CFE)',1809),
+ h('2026-04-17','egreso','Javier González','Limpieza del distrito comercial',12000),
+ h('2026-05-12','egreso','Javier González','Limpieza del distrito comercial',12000),
+ h('2026-05-15','egreso','Pago CFE','Pago de energía eléctrica (CFE)',2767),
+ h('2026-06-15','egreso','Javier González','Limpieza del distrito comercial',12000),
+ h('2026-06-15','egreso','Pago CFE','Pago de energía eléctrica (CFE)',2721)
+];
+
+function buildInitialState(){
+  let folio = 0;
+  const movimientos = HIST_RAW.map((m,i)=>{
+    const mv = {id:'m'+(i+1), fecha:m.fecha, tipo:m.tipo, nombre:m.nombre, lote:m.lote, concepto:m.concepto, cantidad:m.cantidad, folio:null};
+    if (m.tipo === 'ingreso'){ folio++; mv.folio = 'F-' + String(folio).padStart(4,'0'); }
+    return mv;
+  });
+  return {
+    saldoInicial:{fecha:'2026-01-01', monto:67200},
+    folioCounter: folio,
+    movimientos,
+    nextId: movimientos.length + 1
+  };
+}
+
+const CONCEPTOS_INGRESO = [
+  'Pago de mantenimiento',
+  'Cuota extraordinaria',
+  'Multa',
+  'Reconexión de servicio',
+  'Otro (especificar)'
+];
+const CONCEPTOS_EGRESO = [
+  'Limpieza del distrito comercial',
+  'Pago de energía eléctrica (CFE)',
+  'Pago de impuesto predial',
+  'Mantenimiento general',
+  'Arreglo de fotoceldas',
+  'Vigilancia',
+  'Material y ferretería',
+  'Otro (especificar)'
+];
+
+let state = null;
+let editingId = null;
+
+async function loadData(){
+  try{
+    const res = await window.storage.get(STORAGE_KEY, false);
+    state = JSON.parse(res.value);
+  }catch(e){
+    state = buildInitialState();
+    await saveData();
+  }
+  renderAll();
+}
+async function saveData(){
+  try{
+    await window.storage.set(STORAGE_KEY, JSON.stringify(state), false);
+  }catch(e){
+    console.error('storage error', e);
+  }
+}
+
+// ---------- Spanish number-to-words ----------
+const UNI=['','uno','dos','tres','cuatro','cinco','seis','siete','ocho','nueve'];
+const DIEZ=['diez','once','doce','trece','catorce','quince','dieciséis','diecisiete','dieciocho','diecinueve'];
+const VEINTE=['veinte','veintiuno','veintidós','veintitrés','veinticuatro','veinticinco','veintiséis','veintisiete','veintiocho','veintinueve'];
+const DECENA=['','','','treinta','cuarenta','cincuenta','sesenta','setenta','ochenta','noventa'];
+const CENTENA=['','ciento','doscientos','trescientos','cuatrocientos','quinientos','seiscientos','setecientos','ochocientos','novecientos'];
+
+function convertirCentena(n){
+  if(n===0) return '';
+  if(n===100) return 'cien';
+  let out='';
+  const c=Math.floor(n/100), r=n%100;
+  if(c>0) out+=CENTENA[c]+' ';
+  if(r>=10 && r<20) out+=DIEZ[r-10];
+  else if(r>=20 && r<30) out+=VEINTE[r-20];
+  else if(r>=30){ const d=Math.floor(r/10), u=r%10; out+=DECENA[d]; if(u>0) out+=' y '+UNI[u]; }
+  else if(r>0) out+=UNI[r];
+  return out.trim();
+}
+function convertirEntero(n){
+  if(n===0) return 'cero';
+  let partes=[];
+  const millones=Math.floor(n/1000000);
+  const miles=Math.floor((n%1000000)/1000);
+  const resto=n%1000;
+  if(millones>0) partes.push(millones===1?'un millón':convertirCentena(millones)+' millones');
+  if(miles>0) partes.push(miles===1?'mil':convertirCentena(miles)+' mil');
+  if(resto>0) partes.push(convertirCentena(resto));
+  return partes.join(' ');
+}
+function numeroALetras(num){
+  num = Math.round(num*100)/100;
+  const entero = Math.floor(num);
+  const centavos = Math.round((num-entero)*100);
+  let letras = convertirEntero(entero);
+  letras = letras.replace(/\buno$/,'un').replace(/veintiuno\b/g,'veintiún');
+  letras = letras.toUpperCase();
+  return letras + ' PESOS ' + String(centavos).padStart(2,'0') + '/100 M.N.';
+}
+function fmtMoney(n){
+  return (n<0?'-':'') + '$' + Math.abs(n).toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+const MESES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+function fmtFechaLarga(iso){
+  const [y,m,d]=iso.split('-').map(Number);
+  return d+' de '+MESES[m-1]+' de '+y;
+}
+function fmtFechaCorta(iso){
+  const [y,m,d]=iso.split('-').map(Number);
+  return String(d).padStart(2,'0')+'/'+String(m).padStart(2,'0')+'/'+y;
+}
+function todayISO(){
+  const d=new Date(); return d.toISOString().slice(0,10);
+}
+
+// ---------- Ledger computation ----------
+function sortedMovs(){
+  return [...state.movimientos].sort((a,b)=> a.fecha===b.fecha ? (a.id>b.id?1:-1) : (a.fecha<b.fecha?-1:1));
+}
+function computeLedger(){
+  let saldo = state.saldoInicial.monto;
+  const rows=[];
+  for(const m of sortedMovs()){
+    saldo += (m.tipo==='ingreso'? m.cantidad : -m.cantidad);
+    rows.push({...m, saldo});
+  }
+  return rows;
+}
+
+// ---------- Seal / logo SVG ----------
+function sealSVG(size){
+  const gid = 'sealGrad' + Math.random().toString(36).slice(2,9);
+  return `<svg width="${size}" height="${size}" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="${gid}" cx="35%" cy="30%" r="80%">
+        <stop offset="0%" stop-color="#DFC272"/>
+        <stop offset="55%" stop-color="#A9812F"/>
+        <stop offset="100%" stop-color="#7C5F1F"/>
+      </radialGradient>
+    </defs>
+    <circle cx="60" cy="60" r="57" fill="url(#${gid})"/>
+    <circle cx="60" cy="60" r="57" fill="none" stroke="#5E4715" stroke-width="1.5"/>
+    <circle cx="60" cy="60" r="49" fill="none" stroke="#F3EFE3" stroke-width="1.4" stroke-dasharray="2.6 3.4"/>
+    <circle cx="60" cy="60" r="41" fill="#182B45"/>
+    <text x="60" y="52" text-anchor="middle" font-family="Fraunces, serif" font-weight="600" font-size="27" fill="#F3EFE3">DC</text>
+    <path d="M40 74 Q45 62 40 52" stroke="#CBA94D" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <path d="M80 74 Q75 62 80 52" stroke="#CBA94D" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <path d="M60 70 L60 82" stroke="#CBA94D" stroke-width="2" stroke-linecap="round"/>
+    <path d="M60 70 Q54 74 51 68" stroke="#CBA94D" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+    <path d="M60 70 Q66 74 69 68" stroke="#CBA94D" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+    <path d="M60 75 Q54 79 51 73" stroke="#CBA94D" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+    <path d="M60 75 Q66 79 69 73" stroke="#CBA94D" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+  </svg>`;
+}
+
+// ---------- Rendering ----------
+function el(id){return document.getElementById(id);}
+
+function renderAll(){
+  el('dc-seal-slot').innerHTML = sealSVG(64);
+  el('dc-fecha-hoy').textContent = 'Actualizado: ' + fmtFechaCorta(todayISO());
+  renderPanel();
+  renderMovForm();
+  renderHistorial();
+  renderRecibos();
+  renderPadron();
+}
+
+function renderPanel(){
+  const rows = computeLedger();
+  const saldoFinal = rows.length ? rows[rows.length-1].saldo : state.saldoInicial.monto;
+  el('dc-saldo-actual').textContent = fmtMoney(saldoFinal);
+  el('dc-stat-inicial').textContent = fmtMoney(state.saldoInicial.monto);
+  const totIng = state.movimientos.filter(m=>m.tipo==='ingreso').reduce((s,m)=>s+m.cantidad,0);
+  const totEgr = state.movimientos.filter(m=>m.tipo==='egreso').reduce((s,m)=>s+m.cantidad,0);
+  el('dc-stat-ingresos').textContent = fmtMoney(totIng);
+  el('dc-stat-egresos').textContent = fmtMoney(totEgr);
+
+  const recent = [...rows].reverse().slice(0,8);
+  el('dc-panel-recent').innerHTML = recent.map(m=>`
+    <tr>
+      <td>${fmtFechaCorta(m.fecha)}</td>
+      <td>${m.concepto}${m.nombre? ' — '+m.nombre : ''}</td>
+      <td>${m.lote? '#'+m.lote : '—'}</td>
+      <td><span class="dc-pill ${m.tipo==='ingreso'?'ing':'egr'}">${m.tipo==='ingreso'?'Ingreso':'Egreso'}</span></td>
+      <td class="dc-amt ${m.tipo==='ingreso'?'ing':'egr'}">${m.tipo==='ingreso'?'+':'-'}${fmtMoney(m.cantidad)}</td>
+    </tr>`).join('') || '<tr><td colspan="5" class="dc-empty">Aún no hay movimientos.</td></tr>';
+}
+
+function loteOptionsHTML(selected){
+  return '<option value="">— Sin lote / otro —</option>' + LOTES.map(l=>
+    `<option value="${l.lote}" ${String(selected)===String(l.lote)?'selected':''}>#${l.lote} — ${l.nombre} (${l.ubicacion})</option>`
+  ).join('');
+}
+
+function renderMovForm(){
+  el('f-lote').innerHTML = loteOptionsHTML('');
+  if(!el('f-fecha').value) el('f-fecha').value = todayISO();
+  if(!el('f-concepto-select').innerHTML){
+    setTipo(currentTipo);
+  }
+}
+
+function conceptoOptionsHTML(tipo){
+  const list = tipo==='ingreso' ? CONCEPTOS_INGRESO : CONCEPTOS_EGRESO;
+  return list.map(c=>`<option value="${c}">${c}</option>`).join('');
+}
+function updateConceptoOtroVisibility(){
+  const sel = el('f-concepto-select').value;
+  el('f-concepto-otro').style.display = sel === 'Otro (especificar)' ? '' : 'none';
+}
+
+let currentTipo = 'ingreso';
+function setTipo(tipo){
+  currentTipo = tipo;
+  document.querySelectorAll('.dc-type-btn').forEach(b=>b.classList.toggle('active', b.dataset.tipo===tipo));
+  el('f-submit').textContent = editingId ? 'Guardar cambios' : (tipo==='ingreso' ? 'Registrar ingreso' : 'Registrar egreso');
+  el('f-lote-wrap').style.display = tipo==='ingreso' ? '' : 'none';
+  el('f-concepto-select').innerHTML = conceptoOptionsHTML(tipo);
+  el('f-concepto-otro').value = '';
+  updateConceptoOtroVisibility();
+}
+
+function renderHistorial(){
+  const rows = computeLedger();
+  const desde = el('h-desde').value;
+  const hasta = el('h-hasta').value;
+  const filtered = rows.filter(m => (!desde || m.fecha>=desde) && (!hasta || m.fecha<=hasta));
+  const tbody = el('h-tbody');
+  if(!filtered.length){
+    tbody.innerHTML=''; el('h-empty').hidden=false;
+  }else{
+    el('h-empty').hidden=true;
+    tbody.innerHTML = filtered.map(m=>`
+      <tr>
+        <td>${fmtFechaCorta(m.fecha)}</td>
+        <td>${m.folio || '—'}</td>
+        <td>${m.concepto}${m.nombre? ' — '+m.nombre : ''}</td>
+        <td>${m.lote? '#'+m.lote : '—'}</td>
+        <td class="dc-amt ing">${m.tipo==='ingreso'? fmtMoney(m.cantidad):''}</td>
+        <td class="dc-amt egr">${m.tipo==='egreso'? fmtMoney(m.cantidad):''}</td>
+        <td class="dc-amt saldo">${fmtMoney(m.saldo)}</td>
+        <td class="dc-row-actions dc-print-hide">
+          <button class="dc-icon-btn" title="Editar" data-edit="${m.id}">✎</button>
+          <button class="dc-icon-btn" title="Eliminar" data-del="${m.id}">🗑</button>
+        </td>
+      </tr>`).join('');
+  }
+  tbody.querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click',()=>startEdit(b.dataset.edit)));
+  tbody.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',()=>deleteMov(b.dataset.del)));
+}
+
+function renderRecibos(){
+  const q = (el('r-buscar').value||'').toLowerCase().trim();
+  const recibos = computeLedger().filter(m=>m.tipo==='ingreso').reverse()
+    .filter(m => !q || (m.folio||'').toLowerCase().includes(q) || (m.nombre||'').toLowerCase().includes(q));
+  el('r-tbody').innerHTML = recibos.map(m=>`
+    <tr>
+      <td>${m.folio}</td>
+      <td>${fmtFechaCorta(m.fecha)}</td>
+      <td>${m.nombre}</td>
+      <td>${m.lote? '#'+m.lote : '—'}</td>
+      <td class="dc-amt ing">${fmtMoney(m.cantidad)}</td>
+      <td class="dc-print-hide"><button class="dc-btn ghost small" data-recibo="${m.id}">Ver / imprimir</button></td>
+    </tr>`).join('') || '<tr><td colspan="6" class="dc-empty">Sin recibos.</td></tr>';
+  el('r-tbody').querySelectorAll('[data-recibo]').forEach(b=>b.addEventListener('click',()=>openReceipt(b.dataset.recibo)));
+}
+
+function renderPadron(){
+  const q = (el('p-buscar').value||'').toLowerCase().trim();
+  const list = LOTES.filter(l=> !q || l.nombre.toLowerCase().includes(q) || String(l.lote).includes(q) || l.ubicacion.toLowerCase().includes(q));
+  el('p-tbody').innerHTML = list.map(l=>`
+    <tr><td>#${l.lote}</td><td>${l.nombre}</td><td>${l.ubicacion}</td><td>${l.telefono}</td></tr>
+  `).join('') || '<tr><td colspan="4" class="dc-empty">Sin resultados.</td></tr>';
+}
+
+// ---------- Receipt ----------
+function receiptHTML(m){
+  return `
+  <div class="dc-receipt">
+    <div class="dc-receipt-head">
+      <div class="brand">${sealSVG(42)}
+        <div><div class="name">Distrito Comercial</div><div class="sub">Recibo de pago</div></div>
+      </div>
+      <div class="folio"><div class="k">Folio</div><div class="v">${m.folio}</div></div>
+    </div>
+    <hr/>
+    <div class="dc-receipt-row"><div class="k">Fecha</div><div class="v">${fmtFechaLarga(m.fecha)}</div></div>
+    <div class="dc-receipt-row"><div class="k">Recibí de</div><div class="v">${m.nombre}</div></div>
+    <div class="dc-receipt-row"><div class="k">Lote</div><div class="v">${m.lote? '#'+m.lote : '—'}</div></div>
+    <div class="dc-receipt-row"><div class="k">Concepto</div><div class="v">${m.concepto}</div></div>
+    <div class="dc-receipt-amount">
+      <div class="num">${fmtMoney(m.cantidad)}</div>
+    </div>
+    <div class="dc-receipt-letras">SON: ${numeroALetras(m.cantidad)}</div>
+    <div class="dc-receipt-sign"><div class="line"></div><div class="cap">Recibió — Distrito Comercial</div></div>
+  </div>`;
+}
+
+function openReceipt(id){
+  const m = computeLedger().find(x=>x.id===id);
+  if(!m) return;
+  el('dc-modal-body').innerHTML = receiptHTML(m);
+  el('dc-modal').hidden = false;
+  el('dc-modal').dataset.movId = id;
+}
+el('dc-modal-close').addEventListener('click', ()=> el('dc-modal').hidden = true);
+el('dc-modal-print').addEventListener('click', ()=>{
+  const id = el('dc-modal').dataset.movId;
+  const m = computeLedger().find(x=>x.id===id);
+  if(!m) return;
+  el('dc-print-area').innerHTML = `<div style="max-width:420px;margin:40px auto;font-family:Inter,sans-serif;">${receiptHTML(m)}</div>`;
+  window.print();
+});
+
+// ---------- Historial print ----------
+el('h-imprimir').addEventListener('click', ()=>{
+  const rows = computeLedger();
+  const desde = el('h-desde').value, hasta = el('h-hasta').value;
+  const filtered = rows.filter(m => (!desde || m.fecha>=desde) && (!hasta || m.fecha<=hasta));
+  const totIng = filtered.filter(m=>m.tipo==='ingreso').reduce((s,m)=>s+m.cantidad,0);
+  const totEgr = filtered.filter(m=>m.tipo==='egreso').reduce((s,m)=>s+m.cantidad,0);
+  const saldoFinal = filtered.length ? filtered[filtered.length-1].saldo : state.saldoInicial.monto;
+  const rangoTxt = (desde?fmtFechaCorta(desde):'inicio') + ' — ' + (hasta?fmtFechaCorta(hasta):'hoy');
+  el('dc-print-area').innerHTML = `
+    <div style="max-width:800px;margin:30px auto;font-family:Inter,sans-serif;color:#26241F;">
+      <div style="display:flex;align-items:center;gap:14px;border-bottom:2px solid #182B45;padding-bottom:14px;margin-bottom:16px;">
+        ${sealSVG(50)}
+        <div>
+          <div style="font-family:Fraunces,serif;font-size:20px;font-weight:600;color:#182B45;">Distrito Comercial</div>
+          <div style="font-size:12px;color:#84806E;">Historial de movimientos · ${rangoTxt}</div>
+        </div>
+      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead><tr style="text-align:left;border-bottom:1.5px solid #182B45;">
+          <th style="padding:6px 4px;">Fecha</th><th style="padding:6px 4px;">Folio</th><th style="padding:6px 4px;">Concepto / Nombre</th>
+          <th style="padding:6px 4px;">Lote</th><th style="padding:6px 4px;text-align:right;">Ingreso</th>
+          <th style="padding:6px 4px;text-align:right;">Egreso</th><th style="padding:6px 4px;text-align:right;">Saldo</th>
+        </tr></thead>
+        <tbody>
+          ${filtered.map(m=>`<tr style="border-bottom:1px solid #E7DFC7;">
+            <td style="padding:5px 4px;">${fmtFechaCorta(m.fecha)}</td>
+            <td style="padding:5px 4px;">${m.folio||'—'}</td>
+            <td style="padding:5px 4px;">${m.concepto}${m.nombre?' — '+m.nombre:''}</td>
+            <td style="padding:5px 4px;">${m.lote?'#'+m.lote:'—'}</td>
+            <td style="padding:5px 4px;text-align:right;">${m.tipo==='ingreso'?fmtMoney(m.cantidad):''}</td>
+            <td style="padding:5px 4px;text-align:right;">${m.tipo==='egreso'?fmtMoney(m.cantidad):''}</td>
+            <td style="padding:5px 4px;text-align:right;font-weight:600;">${fmtMoney(m.saldo)}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+      <div style="display:flex;justify-content:flex-end;gap:26px;margin-top:16px;font-size:13px;">
+        <div>Total ingresos: <b>${fmtMoney(totIng)}</b></div>
+        <div>Total egresos: <b>${fmtMoney(totEgr)}</b></div>
+        <div>Saldo al ${hasta?fmtFechaCorta(hasta):'día de hoy'}: <b>${fmtMoney(saldoFinal)}</b></div>
+      </div>
+    </div>`;
+  window.print();
+});
+
+// ---------- Form submit / edit / delete ----------
+function startEdit(id){
+  const m = state.movimientos.find(x=>x.id===id);
+  if(!m) return;
+  editingId = id;
+  document.querySelector('[data-tab="movimiento"]').click();
+  setTipo(m.tipo);
+  el('f-fecha').value = m.fecha;
+  el('f-lote').value = m.lote || '';
+  el('f-nombre').value = m.nombre || '';
+  const list = m.tipo==='ingreso' ? CONCEPTOS_INGRESO : CONCEPTOS_EGRESO;
+  if(list.includes(m.concepto)){
+    el('f-concepto-select').value = m.concepto;
+    el('f-concepto-otro').value = '';
+  }else{
+    el('f-concepto-select').value = 'Otro (especificar)';
+    el('f-concepto-otro').value = m.concepto || '';
+  }
+  updateConceptoOtroVisibility();
+  el('f-cantidad').value = m.cantidad;
+  el('f-cancel-edit').hidden = false;
+  el('dc-mov-title').textContent = 'Editar movimiento';
+  el('f-submit').textContent = 'Guardar cambios';
+}
+function resetForm(){
+  editingId = null;
+  el('dc-mov-form').reset();
+  el('f-fecha').value = todayISO();
+  el('f-lote').value = '';
+  el('f-cancel-edit').hidden = true;
+  el('dc-mov-title').textContent = 'Registrar movimiento';
+  setTipo('ingreso');
+}
+function deleteMov(id){
+  if(!confirm('¿Eliminar este movimiento? Esta acción no se puede deshacer.')) return;
+  state.movimientos = state.movimientos.filter(m=>m.id!==id);
+  saveData().then(renderAll);
+}
+
+el('f-lote').addEventListener('change', ()=>{
+  const val = el('f-lote').value;
+  if(!val) return;
+  const l = LOTES.find(x=>String(x.lote)===val);
+  if(l) el('f-nombre').value = l.nombre;
+});
+
+el('f-concepto-select').addEventListener('change', updateConceptoOtroVisibility);
+
+document.querySelectorAll('.dc-type-btn').forEach(b=>{
+  b.addEventListener('click', ()=> setTipo(b.dataset.tipo));
+});
+
+el('f-cancel-edit').addEventListener('click', resetForm);
+
+el('dc-mov-form').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const fecha = el('f-fecha').value;
+  const lote = el('f-lote').value ? Number(el('f-lote').value) : null;
+  const nombre = el('f-nombre').value.trim();
+  const conceptoSel = el('f-concepto-select').value;
+  const concepto = conceptoSel === 'Otro (especificar)' ? el('f-concepto-otro').value.trim() : conceptoSel;
+  const cantidad = parseFloat(el('f-cantidad').value);
+  if(!fecha || !nombre || !concepto || isNaN(cantidad) || cantidad<=0){
+    alert('Revisa que todos los campos estén completos y la cantidad sea mayor a cero.');
+    return;
+  }
+  if(editingId){
+    const m = state.movimientos.find(x=>x.id===editingId);
+    m.fecha=fecha; m.tipo=currentTipo; m.lote=lote; m.nombre=nombre; m.concepto=concepto; m.cantidad=cantidad;
+    if(currentTipo==='ingreso' && !m.folio){
+      state.folioCounter++; m.folio = 'F-'+String(state.folioCounter).padStart(4,'0');
+    }
+    if(currentTipo==='egreso'){ m.folio=null; }
+    await saveData();
+    resetForm();
+    renderAll();
+    alert('Movimiento actualizado.');
+    return;
+  }
+  const mv = {id:'m'+(state.nextId++), fecha, tipo:currentTipo, lote, nombre, concepto, cantidad, folio:null};
+  if(currentTipo==='ingreso'){
+    state.folioCounter++;
+    mv.folio = 'F-'+String(state.folioCounter).padStart(4,'0');
+  }
+  state.movimientos.push(mv);
+  await saveData();
+  resetForm();
+  renderAll();
+  if(currentTipo==='ingreso'){
+    openReceipt(mv.id);
+  }
+});
+
+// ---------- Tabs ----------
+document.querySelectorAll('.dc-tab').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.dc-tab').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.dc-section').forEach(s=>s.hidden=true);
+    el('tab-'+btn.dataset.tab).hidden=false;
+  });
+});
+
+el('h-desde').addEventListener('change', renderHistorial);
+el('h-hasta').addEventListener('change', renderHistorial);
+el('h-limpiar').addEventListener('click', ()=>{ el('h-desde').value=''; el('h-hasta').value=''; renderHistorial(); });
+el('r-buscar').addEventListener('input', renderRecibos);
+el('p-buscar').addEventListener('input', renderPadron);
+
+loadData();
+})();
+</script>

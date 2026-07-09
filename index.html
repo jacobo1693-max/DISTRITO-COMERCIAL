@@ -167,6 +167,8 @@ table.dc-table tr:hover td{background:#FBF8F0;}
 }
 .dc-pill.ing{background:var(--sage-bg);color:var(--sage);}
 .dc-pill.egr{background:var(--rust-bg);color:var(--rust);}
+.dc-row-cancel td{text-decoration:line-through;color:var(--muted);opacity:.65;}
+.dc-row-cancel .dc-pill{text-decoration:none;opacity:1;}
 .dc-row-actions{display:flex;gap:6px;}
 .dc-icon-btn{
   border:none;background:none;cursor:pointer;color:var(--muted);font-size:14px;padding:2px 5px;border-radius:5px;
@@ -218,7 +220,15 @@ table.dc-table tr:hover td{background:#FBF8F0;}
 .dc-receipt-amount{
   text-align:center;margin:18px 0 10px;padding:14px;background:var(--sage-bg);border-radius:8px;
 }
+.dc-receipt-amount.egr{background:var(--rust-bg);}
 .dc-receipt-amount .num{font-family:'Fraunces',serif;font-size:26px;font-weight:700;color:var(--sage);}
+.dc-receipt-amount.egr .num{color:var(--rust);}
+.dc-receipt-stamp{
+  position:absolute;top:38%;left:50%;transform:translate(-50%,-50%) rotate(-18deg);
+  font-family:'Fraunces',serif;font-weight:700;font-size:34px;letter-spacing:.08em;
+  color:var(--rust);border:4px solid var(--rust);border-radius:10px;padding:4px 18px;
+  opacity:.45;pointer-events:none;z-index:1;white-space:nowrap;
+}
 .dc-receipt-letras{font-size:11px;text-align:center;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;line-height:1.5;}
 .dc-receipt-sign{margin-top:26px;text-align:center;}
 .dc-receipt-sign .line{border-top:1px solid var(--ink);width:60%;margin:0 auto 5px;}
@@ -340,7 +350,7 @@ table.dc-table tr:hover td{background:#FBF8F0;}
       <p class="dc-hint">Busca por folio o nombre y vuelve a imprimir cualquier recibo.</p>
       <div class="dc-search"><input type="text" id="r-buscar" placeholder="Buscar por folio o nombre…"></div>
       <div class="dc-table-wrap"><table class="dc-table">
-        <thead><tr><th>Folio</th><th>Fecha</th><th>Nombre</th><th>Lote</th><th style="text-align:right">Cantidad</th><th></th></tr></thead>
+        <thead><tr><th>Folio</th><th>Fecha</th><th>Tipo</th><th>Nombre / Concepto</th><th>Lote</th><th style="text-align:right">Cantidad</th><th>Estado</th><th></th></tr></thead>
         <tbody id="r-tbody"></tbody>
       </table></div>
     </div>
@@ -486,9 +496,8 @@ const HIST_RAW = [
 function buildInitialState(){
   let folio = 0;
   const movimientos = HIST_RAW.map((m,i)=>{
-    const mv = {id:'m'+(i+1), fecha:m.fecha, tipo:m.tipo, nombre:m.nombre, lote:m.lote, concepto:m.concepto, cantidad:m.cantidad, folio:null};
-    if (m.tipo === 'ingreso'){ folio++; mv.folio = 'F-' + String(folio).padStart(4,'0'); }
-    return mv;
+    folio++;
+    return {id:'m'+(i+1), fecha:m.fecha, tipo:m.tipo, nombre:m.nombre, lote:m.lote, concepto:m.concepto, cantidad:m.cantidad, folio:'F-'+String(folio).padStart(4,'0'), cancelado:false};
   });
   return {
     saldoInicial:{fecha:'2026-01-01', monto:67200},
@@ -523,11 +532,27 @@ async function loadData(){
   try{
     const res = await window.storage.get(STORAGE_KEY, false);
     state = JSON.parse(res.value);
+    migrateState();
   }catch(e){
     state = buildInitialState();
     await saveData();
   }
   renderAll();
+}
+function migrateState(){
+  let changed = false;
+  state.movimientos.forEach(m=>{
+    if(m.cancelado === undefined){ m.cancelado = false; changed = true; }
+  });
+  const faltaFolio = state.movimientos.some(m => !m.folio);
+  if(faltaFolio){
+    const ordenados = [...state.movimientos].sort((a,b)=> a.fecha===b.fecha ? (a.id>b.id?1:-1) : (a.fecha<b.fecha?-1:1));
+    let contador = 0;
+    ordenados.forEach(m=>{ contador++; m.folio = 'F-'+String(contador).padStart(4,'0'); });
+    state.folioCounter = contador;
+    changed = true;
+  }
+  if(changed) saveData();
 }
 async function saveData(){
   try{
@@ -600,7 +625,9 @@ function computeLedger(){
   let saldo = state.saldoInicial.monto;
   const rows=[];
   for(const m of sortedMovs()){
-    saldo += (m.tipo==='ingreso'? m.cantidad : -m.cantidad);
+    if(!m.cancelado){
+      saldo += (m.tipo==='ingreso'? m.cantidad : -m.cantidad);
+    }
     rows.push({...m, saldo});
   }
   return rows;
@@ -657,9 +684,9 @@ function renderPanel(){
 
   const recent = [...rows].reverse().slice(0,8);
   el('dc-panel-recent').innerHTML = recent.map(m=>`
-    <tr>
+    <tr class="${m.cancelado?'dc-row-cancel':''}">
       <td>${fmtFechaCorta(m.fecha)}</td>
-      <td>${m.concepto}${m.nombre? ' — '+m.nombre : ''}</td>
+      <td>${m.concepto}${m.nombre? ' — '+m.nombre : ''}${m.cancelado? ' <span class="dc-pill egr">Cancelado</span>' : ''}</td>
       <td>${m.lote? '#'+m.lote : '—'}</td>
       <td><span class="dc-pill ${m.tipo==='ingreso'?'ing':'egr'}">${m.tipo==='ingreso'?'Ingreso':'Egreso'}</span></td>
       <td class="dc-amt ${m.tipo==='ingreso'?'ing':'egr'}">${m.tipo==='ingreso'?'+':'-'}${fmtMoney(m.cantidad)}</td>
@@ -711,37 +738,41 @@ function renderHistorial(){
   }else{
     el('h-empty').hidden=true;
     tbody.innerHTML = filtered.map(m=>`
-      <tr>
+      <tr class="${m.cancelado?'dc-row-cancel':''}">
         <td>${fmtFechaCorta(m.fecha)}</td>
         <td>${m.folio || '—'}</td>
-        <td>${m.concepto}${m.nombre? ' — '+m.nombre : ''}</td>
+        <td>${m.concepto}${m.nombre? ' — '+m.nombre : ''}${m.cancelado? ' <span class="dc-pill egr">Cancelado</span>' : ''}</td>
         <td>${m.lote? '#'+m.lote : '—'}</td>
         <td class="dc-amt ing">${m.tipo==='ingreso'? fmtMoney(m.cantidad):''}</td>
         <td class="dc-amt egr">${m.tipo==='egreso'? fmtMoney(m.cantidad):''}</td>
         <td class="dc-amt saldo">${fmtMoney(m.saldo)}</td>
         <td class="dc-row-actions dc-print-hide">
           <button class="dc-icon-btn" title="Editar" data-edit="${m.id}">✎</button>
+          <button class="dc-icon-btn" title="${m.cancelado?'Reactivar':'Cancelar'}" data-cancel="${m.id}">${m.cancelado?'↺':'⊘'}</button>
           <button class="dc-icon-btn" title="Eliminar" data-del="${m.id}">🗑</button>
         </td>
       </tr>`).join('');
   }
   tbody.querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click',()=>startEdit(b.dataset.edit)));
+  tbody.querySelectorAll('[data-cancel]').forEach(b=>b.addEventListener('click',()=>toggleCancel(b.dataset.cancel)));
   tbody.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',()=>deleteMov(b.dataset.del)));
 }
 
 function renderRecibos(){
   const q = (el('r-buscar').value||'').toLowerCase().trim();
-  const recibos = computeLedger().filter(m=>m.tipo==='ingreso').reverse()
-    .filter(m => !q || (m.folio||'').toLowerCase().includes(q) || (m.nombre||'').toLowerCase().includes(q));
+  const recibos = computeLedger().filter(m=>m.folio).reverse()
+    .filter(m => !q || (m.folio||'').toLowerCase().includes(q) || (m.nombre||'').toLowerCase().includes(q) || (m.concepto||'').toLowerCase().includes(q));
   el('r-tbody').innerHTML = recibos.map(m=>`
-    <tr>
+    <tr class="${m.cancelado?'dc-row-cancel':''}">
       <td>${m.folio}</td>
       <td>${fmtFechaCorta(m.fecha)}</td>
-      <td>${m.nombre}</td>
+      <td><span class="dc-pill ${m.tipo==='ingreso'?'ing':'egr'}">${m.tipo==='ingreso'?'Ingreso':'Egreso'}</span></td>
+      <td>${m.nombre}${m.nombre!==m.concepto? ' — '+m.concepto : ''}</td>
       <td>${m.lote? '#'+m.lote : '—'}</td>
-      <td class="dc-amt ing">${fmtMoney(m.cantidad)}</td>
+      <td class="dc-amt ${m.tipo==='ingreso'?'ing':'egr'}">${fmtMoney(m.cantidad)}</td>
+      <td>${m.cancelado? '<span class="dc-pill egr">Cancelado</span>' : '<span class="dc-pill ing">Vigente</span>'}</td>
       <td class="dc-print-hide"><button class="dc-btn ghost small" data-recibo="${m.id}">Ver / imprimir</button></td>
-    </tr>`).join('') || '<tr><td colspan="6" class="dc-empty">Sin recibos.</td></tr>';
+    </tr>`).join('') || '<tr><td colspan="8" class="dc-empty">Sin recibos.</td></tr>';
   el('r-tbody').querySelectorAll('[data-recibo]').forEach(b=>b.addEventListener('click',()=>openReceipt(b.dataset.recibo)));
 }
 
@@ -755,24 +786,31 @@ function renderPadron(){
 
 // ---------- Receipt ----------
 function receiptHTML(m){
+  const esIngreso = m.tipo === 'ingreso';
+  const sub = esIngreso ? 'Recibo de pago' : 'Comprobante de egreso';
+  const quienLabel = esIngreso ? 'Recibí de' : 'Pagado a';
+  const amtClass = esIngreso ? 'ing' : 'egr';
+  const firmaCap = esIngreso ? 'Recibió — Distrito Comercial' : 'Autorizó — Distrito Comercial';
+  const stamp = m.cancelado ? `<div class="dc-receipt-stamp">CANCELADO</div>` : '';
   return `
   <div class="dc-receipt">
+    ${stamp}
     <div class="dc-receipt-head">
       <div class="brand">${sealSVG(42)}
-        <div><div class="name">Distrito Comercial</div><div class="sub">Recibo de pago</div></div>
+        <div><div class="name">Distrito Comercial</div><div class="sub">${sub}</div></div>
       </div>
       <div class="folio"><div class="k">Folio</div><div class="v">${m.folio}</div></div>
     </div>
     <hr/>
     <div class="dc-receipt-row"><div class="k">Fecha</div><div class="v">${fmtFechaLarga(m.fecha)}</div></div>
-    <div class="dc-receipt-row"><div class="k">Recibí de</div><div class="v">${m.nombre}</div></div>
+    <div class="dc-receipt-row"><div class="k">${quienLabel}</div><div class="v">${m.nombre}</div></div>
     <div class="dc-receipt-row"><div class="k">Lote</div><div class="v">${m.lote? '#'+m.lote : '—'}</div></div>
     <div class="dc-receipt-row"><div class="k">Concepto</div><div class="v">${m.concepto}</div></div>
-    <div class="dc-receipt-amount">
+    <div class="dc-receipt-amount ${amtClass}">
       <div class="num">${fmtMoney(m.cantidad)}</div>
     </div>
     <div class="dc-receipt-letras">SON: ${numeroALetras(m.cantidad)}</div>
-    <div class="dc-receipt-sign"><div class="line"></div><div class="cap">Recibió — Distrito Comercial</div></div>
+    <div class="dc-receipt-sign"><div class="line"></div><div class="cap">${firmaCap}</div></div>
   </div>`;
 }
 
@@ -808,8 +846,8 @@ el('h-imprimir').addEventListener('click', ()=>{
   const rows = computeLedger();
   const desde = el('h-desde').value, hasta = el('h-hasta').value;
   const filtered = rows.filter(m => (!desde || m.fecha>=desde) && (!hasta || m.fecha<=hasta));
-  const totIng = filtered.filter(m=>m.tipo==='ingreso').reduce((s,m)=>s+m.cantidad,0);
-  const totEgr = filtered.filter(m=>m.tipo==='egreso').reduce((s,m)=>s+m.cantidad,0);
+  const totIng = filtered.filter(m=>m.tipo==='ingreso' && !m.cancelado).reduce((s,m)=>s+m.cantidad,0);
+  const totEgr = filtered.filter(m=>m.tipo==='egreso' && !m.cancelado).reduce((s,m)=>s+m.cantidad,0);
   const saldoFinal = filtered.length ? filtered[filtered.length-1].saldo : state.saldoInicial.monto;
   const rangoTxt = (desde?fmtFechaCorta(desde):'inicio') + ' — ' + (hasta?fmtFechaCorta(hasta):'hoy');
   el('dc-print-area').innerHTML = `
@@ -828,10 +866,10 @@ el('h-imprimir').addEventListener('click', ()=>{
           <th style="padding:6px 4px;text-align:right;">Egreso</th><th style="padding:6px 4px;text-align:right;">Saldo</th>
         </tr></thead>
         <tbody>
-          ${filtered.map(m=>`<tr style="border-bottom:1px solid #E7DFC7;">
+          ${filtered.map(m=>`<tr style="border-bottom:1px solid #E7DFC7;${m.cancelado?'text-decoration:line-through;color:#84806E;':''}">
             <td style="padding:5px 4px;">${fmtFechaCorta(m.fecha)}</td>
             <td style="padding:5px 4px;">${m.folio||'—'}</td>
-            <td style="padding:5px 4px;">${m.concepto}${m.nombre?' — '+m.nombre:''}</td>
+            <td style="padding:5px 4px;">${m.concepto}${m.nombre?' — '+m.nombre:''}${m.cancelado?' (CANCELADO)':''}</td>
             <td style="padding:5px 4px;">${m.lote?'#'+m.lote:'—'}</td>
             <td style="padding:5px 4px;text-align:right;">${m.tipo==='ingreso'?fmtMoney(m.cantidad):''}</td>
             <td style="padding:5px 4px;text-align:right;">${m.tipo==='egreso'?fmtMoney(m.cantidad):''}</td>
@@ -886,6 +924,18 @@ function deleteMov(id){
   state.movimientos = state.movimientos.filter(m=>m.id!==id);
   saveData().then(renderAll);
 }
+function toggleCancel(id){
+  const m = state.movimientos.find(x=>x.id===id);
+  if(!m) return;
+  if(m.cancelado){
+    if(!confirm('¿Reactivar este movimiento? Volverá a afectar el saldo.')) return;
+    m.cancelado = false;
+  }else{
+    if(!confirm('¿Cancelar este movimiento? Conserva su folio para el historial, pero ya no se sumará ni restará del saldo.')) return;
+    m.cancelado = true;
+  }
+  saveData().then(renderAll);
+}
 
 el('f-lote').addEventListener('change', ()=>{
   const val = el('f-lote').value;
@@ -917,28 +967,22 @@ el('dc-mov-form').addEventListener('submit', async (e)=>{
   if(editingId){
     const m = state.movimientos.find(x=>x.id===editingId);
     m.fecha=fecha; m.tipo=currentTipo; m.lote=lote; m.nombre=nombre; m.concepto=concepto; m.cantidad=cantidad;
-    if(currentTipo==='ingreso' && !m.folio){
+    if(!m.folio){
       state.folioCounter++; m.folio = 'F-'+String(state.folioCounter).padStart(4,'0');
     }
-    if(currentTipo==='egreso'){ m.folio=null; }
     await saveData();
     resetForm();
     renderAll();
     alert('Movimiento actualizado.');
     return;
   }
-  const mv = {id:'m'+(state.nextId++), fecha, tipo:currentTipo, lote, nombre, concepto, cantidad, folio:null};
-  if(currentTipo==='ingreso'){
-    state.folioCounter++;
-    mv.folio = 'F-'+String(state.folioCounter).padStart(4,'0');
-  }
+  state.folioCounter++;
+  const mv = {id:'m'+(state.nextId++), fecha, tipo:currentTipo, lote, nombre, concepto, cantidad, folio:'F-'+String(state.folioCounter).padStart(4,'0'), cancelado:false};
   state.movimientos.push(mv);
   await saveData();
   resetForm();
   renderAll();
-  if(currentTipo==='ingreso'){
-    openReceipt(mv.id);
-  }
+  openReceipt(mv.id);
 });
 
 // ---------- Tabs ----------

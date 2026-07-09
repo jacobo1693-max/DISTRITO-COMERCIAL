@@ -184,9 +184,10 @@ table.dc-table tr:hover td{background:#FBF8F0;}
 
 /* ---------- Modal / Receipt ---------- */
 .dc-modal-backdrop{
-  position:fixed;inset:0;background:rgba(14,27,46,0.55);display:flex;align-items:center;justify-content:center;
+  position:fixed;inset:0;background:rgba(14,27,46,0.55);display:none;align-items:center;justify-content:center;
   z-index:100;padding:20px;
 }
+.dc-modal-backdrop.is-open{display:flex;}
 .dc-modal{background:var(--paper);border-radius:14px;max-width:460px;width:100%;max-height:90vh;overflow-y:auto;padding:0;position:relative;}
 .dc-modal-x{
   position:absolute;top:10px;right:12px;background:none;border:none;font-size:20px;line-height:1;
@@ -362,7 +363,7 @@ table.dc-table tr:hover td{background:#FBF8F0;}
 </div>
 
 <!-- RECEIPT MODAL -->
-<div class="dc-modal-backdrop dc-print-hide" id="dc-modal" hidden>
+<div class="dc-modal-backdrop dc-print-hide" id="dc-modal">
   <div class="dc-modal">
     <button class="dc-modal-x" id="dc-modal-x" title="Cerrar" type="button">✕</button>
     <div class="dc-modal-inner" id="dc-modal-body"></div>
@@ -779,11 +780,11 @@ function openReceipt(id){
   const m = computeLedger().find(x=>x.id===id);
   if(!m) return;
   el('dc-modal-body').innerHTML = receiptHTML(m);
-  el('dc-modal').hidden = false;
+  el('dc-modal').classList.add('is-open');
   el('dc-modal').dataset.movId = id;
 }
 function closeReceiptModal(){
-  el('dc-modal').hidden = true;
+  el('dc-modal').classList.remove('is-open');
   el('dc-modal-body').innerHTML = '';
 }
 el('dc-modal-close').addEventListener('click', closeReceiptModal);
@@ -792,7 +793,7 @@ el('dc-modal').addEventListener('click', (e)=>{
   if(e.target.id === 'dc-modal') closeReceiptModal();
 });
 document.addEventListener('keydown', (e)=>{
-  if(e.key === 'Escape' && !el('dc-modal').hidden) closeReceiptModal();
+  if(e.key === 'Escape' && el('dc-modal').classList.contains('is-open')) closeReceiptModal();
 });
 el('dc-modal-print').addEventListener('click', ()=>{
   const id = el('dc-modal').dataset.movId;

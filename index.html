@@ -157,6 +157,10 @@ table.dc-table th{
 }
 table.dc-table td{padding:9px 10px;border-bottom:1px solid var(--paper-line);vertical-align:middle;}
 table.dc-table tr:hover td{background:#FBF8F0;}
+table.dc-table th:last-child, table.dc-table td:last-child{
+  position:sticky;right:0;background:var(--card);box-shadow:-6px 0 8px -6px rgba(38,36,31,0.15);
+}
+table.dc-table tr:hover td:last-child{background:#FBF8F0;}
 .dc-amt{font-family:'IBM Plex Mono',monospace;font-weight:600;text-align:right;white-space:nowrap;}
 .dc-amt.ing{color:var(--sage);}
 .dc-amt.egr{color:var(--rust);}
@@ -177,6 +181,12 @@ table.dc-table tr:hover td{background:#FBF8F0;}
 
 .dc-filter-row{display:flex;gap:12px;align-items:end;flex-wrap:wrap;margin-bottom:16px;}
 .dc-filter-row .dc-field{min-width:150px;}
+.dc-period-summary{
+  display:flex;gap:22px;flex-wrap:wrap;background:var(--sage-bg);border:1px solid var(--paper-line);
+  border-radius:10px;padding:12px 16px;margin-bottom:16px;
+}
+.dc-period-summary .item .k{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);}
+.dc-period-summary .item .v{font-family:'Fraunces',serif;font-size:17px;font-weight:600;color:var(--navy);}
 .dc-empty{text-align:center;color:var(--muted);font-size:13px;padding:30px 10px;}
 
 /* ---------- Search box (padron) ---------- */
@@ -248,6 +258,8 @@ table.dc-table tr:hover td{background:#FBF8F0;}
   .dc-masthead-balance{text-align:left;width:100%;margin-top:10px;}
   .dc-form{grid-template-columns:1fr;}
   .dc-stat-row{grid-template-columns:1fr;}
+  .dc-icon-btn{font-size:17px;padding:6px 8px;}
+  .dc-row-actions{gap:2px;}
 }
 </style>
 </head>
@@ -335,6 +347,7 @@ table.dc-table tr:hover td{background:#FBF8F0;}
         <button class="dc-btn ghost dc-print-hide" id="h-limpiar">Ver todo</button>
         <button class="dc-btn brass dc-print-hide" id="h-imprimir">🖨 Imprimir historial</button>
       </div>
+      <div class="dc-period-summary" id="h-summary"></div>
       <div class="dc-table-wrap"><table class="dc-table">
         <thead><tr><th>Fecha</th><th>Folio</th><th>Concepto / Nombre</th><th>Lote</th><th style="text-align:right">Ingreso</th><th style="text-align:right">Egreso</th><th style="text-align:right">Saldo</th><th></th></tr></thead>
         <tbody id="h-tbody"></tbody>
@@ -727,11 +740,23 @@ function setTipo(tipo){
   updateConceptoOtroVisibility();
 }
 
+function saldoAntesDe(rows, fechaISO){
+  if(!fechaISO) return state.saldoInicial.monto;
+  const previos = rows.filter(m => m.fecha < fechaISO);
+  return previos.length ? previos[previos.length-1].saldo : state.saldoInicial.monto;
+}
+
 function renderHistorial(){
   const rows = computeLedger();
   const desde = el('h-desde').value;
   const hasta = el('h-hasta').value;
   const filtered = rows.filter(m => (!desde || m.fecha>=desde) && (!hasta || m.fecha<=hasta));
+  const saldoApertura = saldoAntesDe(rows, desde);
+  const saldoCierre = filtered.length ? filtered[filtered.length-1].saldo : saldoApertura;
+  el('h-summary').innerHTML = `
+    <div class="item"><div class="k">Saldo al ${desde? fmtFechaCorta(desde) : 'inicio del control'}</div><div class="v">${fmtMoney(saldoApertura)}</div></div>
+    <div class="item"><div class="k">Saldo al ${hasta? fmtFechaCorta(hasta) : 'día de hoy'}</div><div class="v">${fmtMoney(saldoCierre)}</div></div>
+  `;
   const tbody = el('h-tbody');
   if(!filtered.length){
     tbody.innerHTML=''; el('h-empty').hidden=false;
@@ -848,16 +873,21 @@ el('h-imprimir').addEventListener('click', ()=>{
   const filtered = rows.filter(m => (!desde || m.fecha>=desde) && (!hasta || m.fecha<=hasta));
   const totIng = filtered.filter(m=>m.tipo==='ingreso' && !m.cancelado).reduce((s,m)=>s+m.cantidad,0);
   const totEgr = filtered.filter(m=>m.tipo==='egreso' && !m.cancelado).reduce((s,m)=>s+m.cantidad,0);
-  const saldoFinal = filtered.length ? filtered[filtered.length-1].saldo : state.saldoInicial.monto;
+  const saldoApertura = saldoAntesDe(rows, desde);
+  const saldoFinal = filtered.length ? filtered[filtered.length-1].saldo : saldoApertura;
   const rangoTxt = (desde?fmtFechaCorta(desde):'inicio') + ' — ' + (hasta?fmtFechaCorta(hasta):'hoy');
   el('dc-print-area').innerHTML = `
     <div style="max-width:800px;margin:30px auto;font-family:Inter,sans-serif;color:#26241F;">
-      <div style="display:flex;align-items:center;gap:14px;border-bottom:2px solid #182B45;padding-bottom:14px;margin-bottom:16px;">
+      <div style="display:flex;align-items:center;gap:14px;border-bottom:2px solid #182B45;padding-bottom:14px;margin-bottom:10px;">
         ${sealSVG(50)}
         <div>
           <div style="font-family:Fraunces,serif;font-size:20px;font-weight:600;color:#182B45;">Distrito Comercial</div>
           <div style="font-size:12px;color:#84806E;">Historial de movimientos · ${rangoTxt}</div>
         </div>
+      </div>
+      <div style="display:flex;gap:24px;background:#EAF1EA;border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:12.5px;">
+        <div>Saldo al ${desde? fmtFechaCorta(desde) : 'inicio del control'}: <b>${fmtMoney(saldoApertura)}</b></div>
+        <div>Saldo al ${hasta? fmtFechaCorta(hasta) : 'día de hoy'}: <b>${fmtMoney(saldoFinal)}</b></div>
       </div>
       <table style="width:100%;border-collapse:collapse;font-size:12px;">
         <thead><tr style="text-align:left;border-bottom:1.5px solid #182B45;">

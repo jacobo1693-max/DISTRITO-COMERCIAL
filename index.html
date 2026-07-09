@@ -329,7 +329,7 @@ table.dc-table tr:hover td:last-child{background:#FBF8F0;}
           <input type="text" id="f-concepto-otro" placeholder="Especifica el concepto" style="margin-top:8px;">
         </div>
         <div class="dc-field"><label>Cantidad (MXN)</label><input type="number" id="f-cantidad" min="0" step="0.01" placeholder="0.00" required></div>
-        <div class="dc-field full"><label id="f-recibio-label">Nombre de quien recibe el pago (firma)</label>
+        <div class="dc-field full"><label id="f-recibio-label">Nombre de quien recibió el dinero (firma)</label>
           <input type="text" id="f-recibio-por" placeholder="Nombre de quien recibe el dinero a nombre del Distrito Comercial">
         </div>
         <div class="full" style="display:flex;gap:10px;margin-top:4px;">
@@ -745,7 +745,7 @@ function setTipo(tipo){
   el('f-concepto-select').innerHTML = conceptoOptionsHTML(tipo);
   el('f-concepto-otro').value = '';
   updateConceptoOtroVisibility();
-  el('f-recibio-label').textContent = tipo==='ingreso' ? 'Nombre de quien recibe el pago (firma)' : 'Nombre de quien entrega / autoriza el pago (firma)';
+  el('f-recibio-label').textContent = 'Nombre de quien recibió el dinero (firma)';
 }
 
 function saldoAntesDe(rows, fechaISO){
@@ -823,7 +823,7 @@ function receiptHTML(m){
   const sub = esIngreso ? 'Recibo de pago' : 'Comprobante de egreso';
   const quienLabel = esIngreso ? 'Recibí de' : 'Pagado a';
   const amtClass = esIngreso ? 'ing' : 'egr';
-  const firmaCap = esIngreso ? 'Firma de quien recibió' : 'Firma de quien entregó / autorizó';
+  const firmaCap = 'Firma de quien recibió';
   const firmaNombre = m.recibioPor ? m.recibioPor : '';
   const stamp = m.cancelado ? `<div class="dc-receipt-stamp">CANCELADO</div>` : '';
   return `

@@ -242,6 +242,7 @@ table.dc-table tr:hover td:last-child{background:#FBF8F0;}
 .dc-receipt-letras{font-size:11px;text-align:center;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;line-height:1.5;}
 .dc-receipt-sign{margin-top:26px;text-align:center;}
 .dc-receipt-sign .line{border-top:1px solid var(--ink);width:60%;margin:0 auto 5px;}
+.dc-receipt-sign .firma-nombre{font-family:'Inter',sans-serif;font-weight:600;font-size:12.5px;color:var(--ink);margin-bottom:2px;}
 .dc-receipt-sign .cap{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;}
 
 /* ---------- Print ---------- */
@@ -328,6 +329,9 @@ table.dc-table tr:hover td:last-child{background:#FBF8F0;}
           <input type="text" id="f-concepto-otro" placeholder="Especifica el concepto" style="margin-top:8px;">
         </div>
         <div class="dc-field"><label>Cantidad (MXN)</label><input type="number" id="f-cantidad" min="0" step="0.01" placeholder="0.00" required></div>
+        <div class="dc-field full"><label id="f-recibio-label">Nombre de quien recibe el pago (firma)</label>
+          <input type="text" id="f-recibio-por" placeholder="Nombre de quien recibe el dinero a nombre del Distrito Comercial">
+        </div>
         <div class="full" style="display:flex;gap:10px;margin-top:4px;">
           <button type="submit" class="dc-btn brass" id="f-submit">Registrar ingreso</button>
           <button type="button" class="dc-btn ghost dc-print-hide" id="f-cancel-edit" hidden>Cancelar edición</button>
@@ -718,6 +722,9 @@ function renderMovForm(){
   if(!el('f-concepto-select').innerHTML){
     setTipo(currentTipo);
   }
+  if(!el('f-recibio-por').value && !editingId){
+    el('f-recibio-por').value = state.lastRecibioPor || '';
+  }
 }
 
 function conceptoOptionsHTML(tipo){
@@ -738,6 +745,7 @@ function setTipo(tipo){
   el('f-concepto-select').innerHTML = conceptoOptionsHTML(tipo);
   el('f-concepto-otro').value = '';
   updateConceptoOtroVisibility();
+  el('f-recibio-label').textContent = tipo==='ingreso' ? 'Nombre de quien recibe el pago (firma)' : 'Nombre de quien entrega / autoriza el pago (firma)';
 }
 
 function saldoAntesDe(rows, fechaISO){
@@ -815,7 +823,8 @@ function receiptHTML(m){
   const sub = esIngreso ? 'Recibo de pago' : 'Comprobante de egreso';
   const quienLabel = esIngreso ? 'Recibí de' : 'Pagado a';
   const amtClass = esIngreso ? 'ing' : 'egr';
-  const firmaCap = esIngreso ? 'Recibió — Distrito Comercial' : 'Autorizó — Distrito Comercial';
+  const firmaCap = esIngreso ? 'Firma de quien recibió' : 'Firma de quien entregó / autorizó';
+  const firmaNombre = m.recibioPor ? m.recibioPor : '';
   const stamp = m.cancelado ? `<div class="dc-receipt-stamp">CANCELADO</div>` : '';
   return `
   <div class="dc-receipt">
@@ -835,7 +844,11 @@ function receiptHTML(m){
       <div class="num">${fmtMoney(m.cantidad)}</div>
     </div>
     <div class="dc-receipt-letras">SON: ${numeroALetras(m.cantidad)}</div>
-    <div class="dc-receipt-sign"><div class="line"></div><div class="cap">${firmaCap}</div></div>
+    <div class="dc-receipt-sign">
+      <div class="line"></div>
+      ${firmaNombre? `<div class="firma-nombre">${firmaNombre}</div>` : ''}
+      <div class="cap">${firmaCap}</div>
+    </div>
   </div>`;
 }
 
@@ -936,6 +949,7 @@ function startEdit(id){
   }
   updateConceptoOtroVisibility();
   el('f-cantidad').value = m.cantidad;
+  el('f-recibio-por').value = m.recibioPor || '';
   el('f-cancel-edit').hidden = false;
   el('dc-mov-title').textContent = 'Editar movimiento';
   el('f-submit').textContent = 'Guardar cambios';
@@ -945,6 +959,7 @@ function resetForm(){
   el('dc-mov-form').reset();
   el('f-fecha').value = todayISO();
   el('f-lote').value = '';
+  el('f-recibio-por').value = state.lastRecibioPor || '';
   el('f-cancel-edit').hidden = true;
   el('dc-mov-title').textContent = 'Registrar movimiento';
   setTipo('ingreso');
@@ -990,13 +1005,15 @@ el('dc-mov-form').addEventListener('submit', async (e)=>{
   const conceptoSel = el('f-concepto-select').value;
   const concepto = conceptoSel === 'Otro (especificar)' ? el('f-concepto-otro').value.trim() : conceptoSel;
   const cantidad = parseFloat(el('f-cantidad').value);
+  const recibioPor = el('f-recibio-por').value.trim();
   if(!fecha || !nombre || !concepto || isNaN(cantidad) || cantidad<=0){
     alert('Revisa que todos los campos estén completos y la cantidad sea mayor a cero.');
     return;
   }
+  state.lastRecibioPor = recibioPor;
   if(editingId){
     const m = state.movimientos.find(x=>x.id===editingId);
-    m.fecha=fecha; m.tipo=currentTipo; m.lote=lote; m.nombre=nombre; m.concepto=concepto; m.cantidad=cantidad;
+    m.fecha=fecha; m.tipo=currentTipo; m.lote=lote; m.nombre=nombre; m.concepto=concepto; m.cantidad=cantidad; m.recibioPor=recibioPor;
     if(!m.folio){
       state.folioCounter++; m.folio = 'F-'+String(state.folioCounter).padStart(4,'0');
     }
@@ -1007,7 +1024,7 @@ el('dc-mov-form').addEventListener('submit', async (e)=>{
     return;
   }
   state.folioCounter++;
-  const mv = {id:'m'+(state.nextId++), fecha, tipo:currentTipo, lote, nombre, concepto, cantidad, folio:'F-'+String(state.folioCounter).padStart(4,'0'), cancelado:false};
+  const mv = {id:'m'+(state.nextId++), fecha, tipo:currentTipo, lote, nombre, concepto, cantidad, recibioPor, folio:'F-'+String(state.folioCounter).padStart(4,'0'), cancelado:false};
   state.movimientos.push(mv);
   await saveData();
   resetForm();

@@ -307,6 +307,15 @@ table.dc-table tr:hover td:last-child{background:#FBF8F0;}
         <tbody id="dc-panel-recent"></tbody>
       </table></div>
     </div>
+    <div class="dc-card">
+      <h2>Respaldo de datos</h2>
+      <p class="dc-hint">Los datos se guardan en este navegador. Descarga una copia de seguridad de vez en cuando, y guárdala en tu correo o Drive por si cambias de celular o se borra el navegador.</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="dc-btn brass" id="dc-backup-download">⬇ Descargar respaldo</button>
+        <button class="dc-btn ghost" id="dc-backup-restore-btn">⬆ Restaurar respaldo</button>
+        <input type="file" id="dc-backup-file" accept="application/json" style="display:none;">
+      </div>
+    </div>
   </section>
 
   <!-- MOVIMIENTO -->
@@ -545,10 +554,30 @@ const CONCEPTOS_EGRESO = [
 let state = null;
 let editingId = null;
 
+async function storageGet(key){
+  if(typeof window.storage !== 'undefined' && window.storage && typeof window.storage.get === 'function'){
+    try{
+      const res = await window.storage.get(key, false);
+      if(res && res.value !== undefined) return res.value;
+    }catch(e){ /* fall through to localStorage */ }
+  }
+  const v = localStorage.getItem(key);
+  if(v === null) throw new Error('sin datos guardados');
+  return v;
+}
+async function storageSet(key, value){
+  let ok = false;
+  if(typeof window.storage !== 'undefined' && window.storage && typeof window.storage.set === 'function'){
+    try{ await window.storage.set(key, value, false); ok = true; }catch(e){ console.error('window.storage falló', e); }
+  }
+  try{ localStorage.setItem(key, value); ok = true; }catch(e){ console.error('localStorage falló', e); }
+  if(!ok) throw new Error('No se pudo guardar en ningún almacenamiento disponible');
+}
+
 async function loadData(){
   try{
-    const res = await window.storage.get(STORAGE_KEY, false);
-    state = JSON.parse(res.value);
+    const value = await storageGet(STORAGE_KEY);
+    state = JSON.parse(value);
     migrateState();
   }catch(e){
     state = buildInitialState();
@@ -573,9 +602,10 @@ function migrateState(){
 }
 async function saveData(){
   try{
-    await window.storage.set(STORAGE_KEY, JSON.stringify(state), false);
+    await storageSet(STORAGE_KEY, JSON.stringify(state));
   }catch(e){
     console.error('storage error', e);
+    alert('No se pudieron guardar los cambios en este navegador. Revisa que no estés en modo incógnito o con el almacenamiento del sitio bloqueado.');
   }
 }
 
@@ -1047,6 +1077,43 @@ el('h-hasta').addEventListener('change', renderHistorial);
 el('h-limpiar').addEventListener('click', ()=>{ el('h-desde').value=''; el('h-hasta').value=''; renderHistorial(); });
 el('r-buscar').addEventListener('input', renderRecibos);
 el('p-buscar').addEventListener('input', renderPadron);
+
+el('dc-backup-download').addEventListener('click', ()=>{
+  const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'respaldo-distrito-comercial-' + todayISO() + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+el('dc-backup-restore-btn').addEventListener('click', ()=> el('dc-backup-file').click());
+el('dc-backup-file').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = async (ev)=>{
+    try{
+      const parsed = JSON.parse(ev.target.result);
+      if(!parsed || !Array.isArray(parsed.movimientos) || !parsed.saldoInicial){
+        alert('Este archivo no parece ser un respaldo válido de Distrito Comercial.');
+        return;
+      }
+      if(!confirm('¿Restaurar este respaldo? Reemplazará todos los datos actuales en este navegador.')) return;
+      state = parsed;
+      migrateState();
+      await saveData();
+      renderAll();
+      alert('Respaldo restaurado correctamente.');
+    }catch(err){
+      alert('No se pudo leer el archivo. Asegúrate de que sea un respaldo (.json) válido.');
+    }
+    el('dc-backup-file').value = '';
+  };
+  reader.readAsText(file);
+});
 
 loadData();
 })();

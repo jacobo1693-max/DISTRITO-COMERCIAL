@@ -263,6 +263,9 @@ table.dc-table tr:hover td:last-child{background:#FBF8F0;}
   .dc-row-actions{gap:2px;}
 }
 </style>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
@@ -281,6 +284,7 @@ table.dc-table tr:hover td:last-child{background:#FBF8F0;}
       <p class="label">Saldo disponible</p>
       <div class="amount" id="dc-saldo-actual">$0.00</div>
       <div class="fecha" id="dc-fecha-hoy"></div>
+      <div class="fecha" id="dc-sync-status" style="margin-top:2px;"></div>
     </div>
   </div>
 
@@ -416,6 +420,32 @@ table.dc-table tr:hover td:last-child{background:#FBF8F0;}
 (function(){
 
 const STORAGE_KEY = 'dc-data-v1';
+
+// ---------- Firebase (para sincronizar entre celular y computadora) ----------
+// Sustituye estos valores por los de tu propio proyecto de Firebase.
+// (Configuración del proyecto > Tus apps > el ícono </> ). Si los dejas
+// como están, la app sigue funcionando pero solo se guarda en este navegador.
+const firebaseConfig = {
+  apiKey: "TU_API_KEY",
+  authDomain: "TU_PROYECTO.firebaseapp.com",
+  projectId: "TU_PROYECTO",
+  storageBucket: "TU_PROYECTO.appspot.com",
+  messagingSenderId: "TU_SENDER_ID",
+  appId: "TU_APP_ID"
+};
+let fbDb = null;
+const fbAuthPromise = (async ()=>{
+  try{
+    if(firebaseConfig.apiKey && firebaseConfig.apiKey !== 'TU_API_KEY' && typeof firebase !== 'undefined'){
+      firebase.initializeApp(firebaseConfig);
+      fbDb = firebase.firestore();
+      await firebase.auth().signInAnonymously();
+    }
+  }catch(e){
+    console.error('Firebase no disponible, se usará solo el almacenamiento de este navegador', e);
+    fbDb = null;
+  }
+})();
 const LOTES = [
  {lote:1, nombre:'Peter Friesen Penner', ubicacion:'Campo 2B', telefono:'625-115-4080'},
  {lote:2, nombre:'Rene Sebastian Friesen Froese', ubicacion:'Campo 2B', telefono:'625-121-9818'},
@@ -555,11 +585,20 @@ let state = null;
 let editingId = null;
 
 async function storageGet(key){
+  if(fbDb){
+    try{
+      const snap = await fbDb.collection('distrito-comercial').doc(key).get();
+      if(snap.exists && snap.data() && snap.data().json) return snap.data().json;
+      throw new Error('sin datos en la nube todavía');
+    }catch(e){
+      console.error('No se pudo leer de Firestore, probando respaldo local', e);
+    }
+  }
   if(typeof window.storage !== 'undefined' && window.storage && typeof window.storage.get === 'function'){
     try{
       const res = await window.storage.get(key, false);
       if(res && res.value !== undefined) return res.value;
-    }catch(e){ /* fall through to localStorage */ }
+    }catch(e){ /* sigue al respaldo local */ }
   }
   const v = localStorage.getItem(key);
   if(v === null) throw new Error('sin datos guardados');
@@ -567,6 +606,12 @@ async function storageGet(key){
 }
 async function storageSet(key, value){
   let ok = false;
+  if(fbDb){
+    try{
+      await fbDb.collection('distrito-comercial').doc(key).set({json:value, actualizado: new Date().toISOString()});
+      ok = true;
+    }catch(e){ console.error('No se pudo guardar en Firestore', e); }
+  }
   if(typeof window.storage !== 'undefined' && window.storage && typeof window.storage.set === 'function'){
     try{ await window.storage.set(key, value, false); ok = true; }catch(e){ console.error('window.storage falló', e); }
   }
@@ -575,6 +620,8 @@ async function storageSet(key, value){
 }
 
 async function loadData(){
+  await fbAuthPromise;
+  el('dc-sync-status').textContent = fbDb ? '☁ Sincronizado en la nube' : '💾 Guardado solo en este navegador';
   try{
     const value = await storageGet(STORAGE_KEY);
     state = JSON.parse(value);

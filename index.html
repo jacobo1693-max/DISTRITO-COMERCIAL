@@ -266,6 +266,7 @@ table.dc-table tr:hover td:last-child{background:#FBF8F0;}
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+<style id="dc-print-page-style"></style>
 </head>
 <body>
 
@@ -929,6 +930,54 @@ function receiptHTML(m){
   </div>`;
 }
 
+function receiptPrintHTML(m){
+  const esIngreso = m.tipo === 'ingreso';
+  const sub = esIngreso ? 'Recibo de pago' : 'Comprobante de egreso';
+  const quienLabel = esIngreso ? 'Recibí de' : 'Pagado a';
+  const amtColor = esIngreso ? '#3F6B4A' : '#8C3B2E';
+  const amtBg = esIngreso ? '#EAF1EA' : '#F6EAE7';
+  const firmaNombre = m.recibioPor ? m.recibioPor : '';
+  const stamp = m.cancelado ? `<div style="position:absolute;top:34%;left:50%;transform:translate(-50%,-50%) rotate(-14deg);font-family:Fraunces,serif;font-weight:700;font-size:52px;letter-spacing:.08em;color:#8C3B2E;border:5px solid #8C3B2E;border-radius:12px;padding:6px 30px;opacity:.4;white-space:nowrap;">CANCELADO</div>` : '';
+  return `
+  <div style="width:100%;box-sizing:border-box;padding:0.3in 0.4in;position:relative;font-family:Inter,sans-serif;color:#26241F;border:2px solid #182B45;border-radius:16px;">
+    ${stamp}
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #182B45;padding-bottom:12px;margin-bottom:18px;">
+      <div style="display:flex;gap:14px;align-items:center;">
+        ${sealSVG(56)}
+        <div>
+          <div style="font-family:Fraunces,serif;font-weight:600;font-size:23px;color:#182B45;">Distrito Comercial</div>
+          <div style="font-size:12px;color:#84806E;text-transform:uppercase;letter-spacing:.06em;">${sub}</div>
+        </div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#84806E;text-transform:uppercase;letter-spacing:.08em;">Folio</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:23px;font-weight:600;color:#A9812F;">${m.folio}</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:40px;">
+      <div style="flex:1.2;">
+        <div style="margin-bottom:15px;"><div style="font-size:10.5px;color:#84806E;text-transform:uppercase;letter-spacing:.06em;">Fecha</div><div style="font-size:15px;font-weight:600;">${fmtFechaLarga(m.fecha)}</div></div>
+        <div style="margin-bottom:15px;"><div style="font-size:10.5px;color:#84806E;text-transform:uppercase;letter-spacing:.06em;">${quienLabel}</div><div style="font-size:15px;font-weight:600;">${m.nombre}</div></div>
+        <div style="margin-bottom:15px;"><div style="font-size:10.5px;color:#84806E;text-transform:uppercase;letter-spacing:.06em;">Lote</div><div style="font-size:15px;font-weight:600;">${m.lote? '#'+m.lote : '—'}</div></div>
+        <div><div style="font-size:10.5px;color:#84806E;text-transform:uppercase;letter-spacing:.06em;">Concepto</div><div style="font-size:15px;font-weight:600;">${m.concepto}</div></div>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;">
+        <div style="background:${amtBg};border-radius:10px;padding:16px 22px;width:100%;">
+          <div style="font-family:Fraunces,serif;font-size:32px;font-weight:700;color:${amtColor};">${fmtMoney(m.cantidad)}</div>
+        </div>
+        <div style="font-size:11px;color:#84806E;text-transform:uppercase;letter-spacing:.03em;margin-top:12px;line-height:1.5;">SON: ${numeroALetras(m.cantidad)}</div>
+      </div>
+    </div>
+    <div style="margin-top:34px;display:flex;justify-content:flex-end;">
+      <div style="text-align:center;width:280px;">
+        <div style="border-top:1px solid #26241F;margin-bottom:5px;"></div>
+        ${firmaNombre? `<div style="font-weight:600;font-size:13px;margin-bottom:2px;">${firmaNombre}</div>` : ''}
+        <div style="font-size:10px;color:#84806E;text-transform:uppercase;letter-spacing:.08em;">Firma de quien recibió</div>
+      </div>
+    </div>
+  </div>`;
+}
+
 function openReceipt(id){
   const m = computeLedger().find(x=>x.id===id);
   if(!m) return;
@@ -952,12 +1001,14 @@ el('dc-modal-print').addEventListener('click', ()=>{
   const id = el('dc-modal').dataset.movId;
   const m = computeLedger().find(x=>x.id===id);
   if(!m) return;
-  el('dc-print-area').innerHTML = `<div style="max-width:420px;margin:40px auto;font-family:Inter,sans-serif;">${receiptHTML(m)}</div>`;
+  el('dc-print-page-style').textContent = '@page{ size: 8.5in 5.5in; margin: 0.25in; }';
+  el('dc-print-area').innerHTML = `<div style="width:100%;box-sizing:border-box;">${receiptPrintHTML(m)}</div>`;
   try{ window.print(); }catch(err){ console.error('No se pudo abrir el diálogo de impresión', err); }
 });
 
 // ---------- Historial print ----------
 el('h-imprimir').addEventListener('click', ()=>{
+  el('dc-print-page-style').textContent = '@page{ size: letter portrait; margin: 0.5in; }';
   const rows = computeLedger();
   const desde = el('h-desde').value, hasta = el('h-hasta').value;
   const filtered = rows.filter(m => (!desde || m.fecha>=desde) && (!hasta || m.fecha<=hasta));

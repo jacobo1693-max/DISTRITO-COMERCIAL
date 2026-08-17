@@ -248,9 +248,8 @@ table.dc-table tr:hover td:last-child{background:#FBF8F0;}
 /* ---------- Print ---------- */
 #dc-print-area{display:none;}
 @media print{
-  body *{visibility:hidden;}
-  #dc-print-area,#dc-print-area *{visibility:visible;}
-  #dc-print-area{display:block;position:absolute;top:0;left:0;width:100%;}
+  .dc-app{display:none !important;}
+  #dc-print-area{display:block !important;}
   .dc-print-hide{display:none !important;}
 }
 
